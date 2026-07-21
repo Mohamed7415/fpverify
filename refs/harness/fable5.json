@@ -1,0 +1,100 @@
+{
+  "model": "Claude Fable 5",
+  "created_at": "2026-07-21T14:04:19.057853+00:00",
+  "params": {
+    "temperature": "uncontrolled (agent harness)",
+    "max_tokens": null
+  },
+  "note": "channel=cursor-harness; n=11/cell; Cursor subagent 采样，9 模型 × 11 个全新独立实例，2026-07；原始数据 experiments/frontier/batch_*.json，本脚本一键重建",
+  "cells": {
+    "rand_num_100::en": {
+      "73": 9,
+      "47": 2
+    },
+    "rand_num_10::en": {
+      "7": 11
+    },
+    "fav_num::en": {
+      "7": 11
+    },
+    "rand_letter::en": {
+      "k": 11
+    },
+    "rand_color::en": {
+      "teal": 11
+    },
+    "fav_color::en": {
+      "blue": 11
+    },
+    "rand_animal::en": {
+      "otter": 10,
+      "octopus": 1
+    },
+    "rand_city::en": {
+      "kyoto": 7,
+      "lisbon": 4
+    },
+    "coin_flip::en": {
+      "heads": 11
+    },
+    "rand_num_100::zh": {
+      "42": 7,
+      "63": 1,
+      "47": 2,
+      "73": 1
+    }
+  },
+  "validity": {
+    "rand_num_100::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_num_10::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "fav_num::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_letter::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_color::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "fav_color::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_animal::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_city::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "coin_flip::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_num_100::zh": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    }
+  },
+  "latencies": {}
+}

@@ -1,0 +1,103 @@
+{
+  "model": "GPT-5.6 sol",
+  "created_at": "2026-07-21T14:04:19.067401+00:00",
+  "params": {
+    "temperature": "uncontrolled (agent harness)",
+    "max_tokens": null
+  },
+  "note": "channel=cursor-harness; n=11/cell; Cursor subagent 采样，9 模型 × 11 个全新独立实例，2026-07；原始数据 experiments/frontier/batch_*.json，本脚本一键重建",
+  "cells": {
+    "rand_num_100::en": {
+      "73": 10,
+      "47": 1
+    },
+    "rand_num_10::en": {
+      "4": 10,
+      "8": 1
+    },
+    "fav_num::en": {
+      "17": 1,
+      "7": 6,
+      "8": 4
+    },
+    "rand_letter::en": {
+      "k": 8,
+      "q": 3
+    },
+    "rand_color::en": {
+      "orange": 11
+    },
+    "fav_color::en": {
+      "blue": 11
+    },
+    "rand_animal::en": {
+      "otter": 11
+    },
+    "rand_city::en": {
+      "lisbon": 11
+    },
+    "coin_flip::en": {
+      "tails": 11
+    },
+    "rand_num_100::zh": {
+      "38": 3,
+      "63": 1,
+      "26": 4,
+      "36": 2,
+      "28": 1
+    }
+  },
+  "validity": {
+    "rand_num_100::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_num_10::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "fav_num::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_letter::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_color::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "fav_color::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_animal::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_city::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "coin_flip::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_num_100::zh": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    }
+  },
+  "latencies": {}
+}

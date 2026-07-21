@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fpverify 检测台 — 你买的模型是真的吗？</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #30363d; --text: #e6edf3;
+    --dim: #8b949e; --accent: #58a6ff; --green: #3fb950; --red: #f85149;
+    --amber: #d29922;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--dim); margin: 0 0 24px; font-size: 13.5px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 20px; margin-bottom: 16px;
+  }
+  label { display: block; font-size: 13px; color: var(--dim); margin: 12px 0 4px; }
+  input, select {
+    width: 100%; padding: 9px 12px; border-radius: 6px; font-size: 14px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  .row { display: flex; gap: 12px; } .row > div { flex: 1; }
+  button {
+    margin-top: 18px; width: 100%; padding: 11px; font-size: 15px; font-weight: 600;
+    border: none; border-radius: 6px; background: var(--accent); color: #0d1117;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .privacy { font-size: 12.5px; color: var(--dim); margin-top: 10px; }
+  .privacy b { color: var(--green); }
+  #log {
+    font: 12.5px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap;
+    max-height: 180px; overflow-y: auto; color: var(--dim);
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; display: none;
+  }
+  #verdict { display: none; }
+  .v-badge {
+    display: inline-block; padding: 3px 14px; border-radius: 999px;
+    font-weight: 700; font-size: 15px; margin-bottom: 8px;
+  }
+  .v-PASS, .v-BEST_MATCH { background: rgba(63,185,80,.15); color: var(--green); }
+  .v-FAIL { background: rgba(248,81,73,.15); color: var(--red); }
+  .v-UNKNOWN, .v-SUSPECT, .v-INCONCLUSIVE { background: rgba(210,153,34,.15); color: var(--amber); }
+  .detail { font-size: 14px; }
+  .warn { color: var(--amber); font-size: 13px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-weight: 500; font-size: 12.5px; }
+  .bar-td { width: 45%; }
+  .bar { height: 8px; border-radius: 4px; background: var(--accent); min-width: 2px; }
+  .claimed-tag { color: var(--accent); font-size: 12px; }
+  .bands { color: var(--dim); font-size: 12px; margin-top: 8px; }
+  a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>fpverify 检测台</h1>
+  <p class="sub">花几毛钱探针费，看看中转站给你上的到底是什么模型。
+     行为指纹 + 序贯统计检验，误判率有数学上界。</p>
+
+  <div class="card">
+    <label>中转站 Base URL（OpenAI 兼容，以 /v1 结尾）</label>
+    <input id="base_url" placeholder="https://api.某中转站.com/v1" spellcheck="false">
+    <label>API Key（只在本机内存，绝不上传——本页面没有任何外部后台）</label>
+    <input id="api_key" type="password" placeholder="sk-..." spellcheck="false">
+    <div class="row">
+      <div>
+        <label>请求用的模型名（发给中转站的 model 字段）
+          <a href="#" id="fetchmodels" style="float:right">拉取模型列表 ↓</a></label>
+        <input id="model" list="modellist" placeholder="gpt-5.6 / claude-fable-5 / ..." spellcheck="false">
+        <datalist id="modellist"></datalist>
+      </div>
+      <div>
+        <label>对照库条目（声称是谁）</label>
+        <select id="claimed"><option value="">自动按模型名匹配</option></select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>指纹库频道</label>
+        <select id="channel"></select>
+      </div>
+      <div>
+        <label>每题采样数（越大越准、越贵）</label>
+        <select id="samples">
+          <option value="4">4（快速粗筛）</option>
+          <option value="8" selected>8（推荐）</option>
+          <option value="12">12（更稳）</option>
+          <option value="20">20（较真）</option>
+        </select>
+      </div>
+    </div>
+    <button id="run">开始检测</button>
+    <p class="privacy"><b>隐私：</b>探针请求由你本机直连中转站；key 不落盘、不经过任何第三方。
+       指纹库是仓库自带的公开数据，更新用 <code>git pull</code>。</p>
+  </div>
+
+  <div class="card" id="logcard" style="display:none">
+    <div id="log"></div>
+  </div>
+
+  <div class="card" id="verdict">
+    <span class="v-badge" id="v-badge"></span>
+    <div class="detail" id="v-detail"></div>
+    <div class="warn" id="v-warn"></div>
+    <table id="ranktable" style="display:none">
+      <thead><tr><th>库内模型</th><th>聚合 JSD（越小越像）</th><th class="bar-td"></th></tr></thead>
+      <tbody id="rankbody"></tbody>
+    </table>
+    <div class="bands" id="v-bands"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let libEntries = [];
+
+async function loadLibrary() {
+  const r = await fetch('/api/library'); const d = await r.json();
+  if (d.error) { alert('指纹库加载失败: ' + d.error); return; }
+  libEntries = d.entries;
+  const channels = [...new Set(d.entries.map(e => e.channel))];
+  $('channel').innerHTML = channels.map(c =>
+    `<option value="${c}">${c}${(d.channels||{})[c] ? ' — ' + d.channels[c] : ''}</option>`).join('');
+  if (channels.includes('api')) $('channel').value = 'api';
+  fillClaimed();
+  $('channel').addEventListener('change', fillClaimed);
+}
+function fillClaimed() {
+  const ch = $('channel').value;
+  const opts = libEntries.filter(e => e.channel === ch)
+    .map(e => `<option value="${e.id}">${e.model}（${e.enrolled_at}，n=${e.samples_per_cell}/cell）</option>`);
+  $('claimed').innerHTML = '<option value="">自动按模型名匹配</option>' + opts.join('');
+}
+
+let timer = null;
+async function poll() {
+  const r = await fetch('/api/status'); const s = await r.json();
+  $('logcard').style.display = 'block';
+  $('log').style.display = 'block';
+  $('log').textContent = s.log.join('\n');
+  $('log').scrollTop = $('log').scrollHeight;
+  if (s.error) { showError(s.error); stop(); return; }
+  if (s.result) { showResult(s.result); }
+  if (!s.running) stop();
+}
+function stop() { clearInterval(timer); timer = null; $('run').disabled = false; $('run').textContent = '开始检测'; }
+
+function showError(msg) {
+  $('verdict').style.display = 'block';
+  $('v-badge').className = 'v-badge v-FAIL'; $('v-badge').textContent = '出错';
+  $('v-detail').textContent = msg; $('v-warn').textContent = '';
+  $('ranktable').style.display = 'none'; $('v-bands').textContent = '';
+}
+
+const VLABEL = {
+  PASS: 'PASS — 与声称一致', FAIL: 'FAIL — 判定注水/偷换',
+  BEST_MATCH: '识别成功', UNKNOWN: '未知模型', SUSPECT: '存疑',
+  INCONCLUSIVE: '证据不足',
+};
+function showResult(res) {
+  $('verdict').style.display = 'block';
+  $('v-badge').className = 'v-badge v-' + res.verdict;
+  $('v-badge').textContent = VLABEL[res.verdict] || res.verdict;
+  $('v-detail').textContent = res.detail + `（共 ${res.n_queries} 次探针查询）`;
+  $('v-warn').textContent = res.warning || '';
+  const rows = res.ranking_display || [];
+  if (rows.length) {
+    const max = Math.max(...rows.map(r => r[1]), 0.001);
+    $('rankbody').innerHTML = rows.map(([name, d, isClaimed]) =>
+      `<tr><td>${name}${isClaimed ? ' <span class="claimed-tag">← 声称</span>' : ''}</td>` +
+      `<td>${d.toFixed(3)}</td>` +
+      `<td class="bar-td"><div class="bar" style="width:${(d / max * 100).toFixed(1)}%"></div></td></tr>`).join('');
+    $('ranktable').style.display = 'table';
+    $('v-bands').textContent =
+      `解读带：JSD ≤ ${res.bands.match} 行为一致；≥ ${res.bands.unknown} 判未知；中间为灰区。`;
+  } else {
+    $('ranktable').style.display = 'none'; $('v-bands').textContent = '';
+  }
+}
+
+$('fetchmodels').addEventListener('click', async (ev) => {
+  ev.preventDefault();
+  const base_url = $('base_url').value.trim(), api_key = $('api_key').value.trim();
+  if (!base_url || !api_key) { alert('先填 Base URL 和 API Key'); return; }
+  ev.target.textContent = '拉取中…';
+  try {
+    const r = await fetch('/api/models', { method: 'POST', body: JSON.stringify({ base_url, api_key }) });
+    const d = await r.json();
+    if (d.error) { alert('拉取失败: ' + d.error); return; }
+    $('modellist').innerHTML = d.models.map(m => `<option value="${m}">`).join('');
+    ev.target.textContent = `已拉取 ${d.models.length} 个模型（在输入框里选）`;
+  } catch (e) { alert('拉取失败: ' + e); }
+  finally { setTimeout(() => ev.target.textContent = '拉取模型列表 ↓', 4000); }
+});
+
+$('run').addEventListener('click', async () => {
+  const body = {
+    base_url: $('base_url').value.trim(), api_key: $('api_key').value.trim(),
+    model: $('model').value.trim(), claimed: $('claimed').value,
+    channel: $('channel').value, samples: $('samples').value,
+  };
+  if (!body.base_url || !body.api_key || !body.model) { alert('请填写 Base URL、API Key 和模型名'); return; }
+  $('verdict').style.display = 'none';
+  const r = await fetch('/api/run', { method: 'POST', body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.error) { alert(d.error); return; }
+  $('run').disabled = true; $('run').textContent = '检测中…（可看下方进度）';
+  timer = setInterval(poll, 800);
+});
+
+loadLibrary();
+</script>
+</body>
+</html>

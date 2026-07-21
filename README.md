@@ -137,6 +137,42 @@ python -m fpverify.cli audit --base-url https://api.deepseek.com/v1 \
 its own freshly-enrolled reference, open an issue with the audit JSON — that would
 directly refute our FPR claim.
 
+## Only have a relay key? (you can't enroll your own reference)
+
+People who buy relays are, by definition, the people who *can't* reach the official
+API. For them: `identify` audits against the **community reference library** in
+[`refs/`](refs/) instead, with a graceful degradation ladder — never overclaiming:
+
+1. Claimed model **in the library** → sequential test verdict (PASS/FAIL, FPR ≤ α)
+   plus a nearest-neighbor ranking over the whole library;
+2. Claimed model **not in the library** → "behaviorally consistent with X"
+   (`BEST_MATCH`) if something matches;
+3. Nothing matches → `UNKNOWN`. An honest "we don't know".
+
+```bash
+python -m fpverify.cli library     # see what's enrolled
+python -m fpverify.cli identify \
+    --base-url https://some-relay.example/v1 --api-key $RELAY_KEY \
+    --model gpt-4o --samples 8     # ≈ 288 one-token requests
+```
+
+Or use the **local web console** — paste base URL / key / claimed model, pick from the
+relay's own model list, get a verdict card with the distance ranking:
+
+```bash
+python -m webui.server             # opens http://127.0.0.1:8765
+```
+
+Probe traffic goes directly from *your machine* to the relay; the key never touches
+any backend of ours (the UI is a local process, the library is public data in git —
+update it with `git pull`).
+
+The library currently ships 9 frontier models measured in July 2026 on the
+`cursor-harness` channel (same-channel comparisons only). The `api` channel — bare
+official-API references usable for relay audits — **is open for contributions**: one
+enrollment costs cents; anti-poisoning rules (provenance + independent cross-check
+within the noise band) are in [`refs/README.md`](refs/README.md).
+
 ## Detection performance (controlled simulation)
 
 Validated against nine adversary types with known ground truth
@@ -207,10 +243,12 @@ probes, cache/latency screening), auto-calibration, and the frontier-model study
 ## Project layout
 
 ```
-fpverify/     reusable library: probes, normalization, JSD, e-process, calibration, nearest-neighbor, CLI
+fpverify/     reusable library: probes, normalization, JSD, e-process, calibration, nearest-neighbor, community-library identify, CLI
+refs/         community reference fingerprint library (manifest + per-model distributions, contribution protocol)
+webui/        local web console for relay users (stdlib server; keys never leave your machine)
 sim/          red team: model distributions, adversaries, HTTP mock relay, traffic model, blue-team probes
 experiments/  evaluation, frontier study, red/blue co-evolution (FPR, power, budget, distance matrices)
-tests/        statistical property tests — 39 total (fairness, FPR bound, power, end-to-end, co-evolution)
+tests/        statistical property tests (fairness, FPR bound, power, end-to-end, co-evolution, library/identify)
 docs/         research notes (problem, threat model, method, experiments, frontier study, multimodal roadmap) + co-evolution ledger
 ```
 

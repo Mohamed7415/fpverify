@@ -121,6 +121,34 @@ py -3.13 -X utf8 -m fpverify.cli audit --base-url https://api.deepseek.com/v1 --
 **可证伪声明**：如果你的官方直连端点、用它自己新入册的参考指纹审计却 FAIL 了，
 请带着审计 JSON 开 issue——那将直接推翻我们的 FPR 声明。
 
+## 只有中转站的 key？（买中转站的人恰恰买不到官方渠道）
+
+这是最常见的真实处境：没法自己入册参考指纹。`identify` 命令改用 [`refs/`](refs/)
+**社区公共指纹库**做降档识别——能精确就精确，不能就如实降档，绝不硬猜：
+
+1. 声称的模型**在库里** → 序贯检验验真伪（PASS/FAIL，误判率 ≤ α）+ 全库距离排名；
+2. 声称的模型**不在库里** → 报告"行为上与库内 X 一致"（`BEST_MATCH`）；
+3. 谁都不像 → `UNKNOWN`，诚实说不知道。
+
+```bash
+py -3.13 -X utf8 -m fpverify.cli library     # 看库里有什么
+py -3.13 -X utf8 -m fpverify.cli identify --base-url https://中转站/v1 --api-key 中转站key --model gpt-4o --samples 8
+```
+
+嫌命令行麻烦就用**本地网页检测台**——填中转站地址 / key / 声称模型（可一键拉取
+中转站自己的模型列表来选），出判定卡片和距离排名：
+
+```bash
+py -3.13 -X utf8 -m webui.server             # 自动打开 http://127.0.0.1:8765
+```
+
+探针流量从**你自己的电脑**直连中转站，key 不经过我们任何后台（UI 是本地进程，
+指纹库是 git 里的公开数据，`git pull` 即更新）。
+
+库目前自带 2026-07 实测的 9 个前沿模型（`cursor-harness` 渠道，仅限同渠道比对）；
+`api` 频道——真正能审中转站的裸官方 API 参考——**公开征集贡献**：入册一次几毛钱，
+防投毒规则（来源出处 + 独立二次入册在噪声带内交叉验证）见 [`refs/README.md`](refs/README.md)。
+
 ## 检出性能（受控仿真）
 
 对九类已知真相的对手做了全面验证（α=0.01、容差自动标定、预算 600 查询；
@@ -178,10 +206,12 @@ py -3.13 -X utf8 -m fpverify.cli audit --base-url https://api.deepseek.com/v1 --
 ## 项目结构
 
 ```
-fpverify/     可复用库：探针、归一化、JSD、e-process、标定、最近邻、CLI
+fpverify/     可复用库：探针、归一化、JSD、e-process、标定、最近邻、公共库 identify、CLI
+refs/         社区公共指纹库（清单 + 各模型分布文件 + 贡献协议）
+webui/        本地网页检测台（标准库实现;key 不出本机）
 sim/          红队仿真：模型分布、对手、HTTP 模拟中转站、流量模型、蓝队探针
 experiments/  评估、前沿实测、红蓝协同进化（FPR、检出率、预算曲线、距离矩阵）
-tests/        统计性质测试——共 39 个（公平性、FPR 上界、检出力、端到端、协同进化）
+tests/        统计性质测试（公平性、FPR 上界、检出力、端到端、协同进化、公共库识别）
 docs/         研究笔记（问题、威胁模型、方法、实验、前沿实测、多模态路线图）+ 协同进化台账
 ```
 

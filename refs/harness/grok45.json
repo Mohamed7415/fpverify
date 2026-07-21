@@ -1,0 +1,100 @@
+{
+  "model": "Grok 4.5",
+  "created_at": "2026-07-21T14:04:19.076886+00:00",
+  "params": {
+    "temperature": "uncontrolled (agent harness)",
+    "max_tokens": null
+  },
+  "note": "channel=cursor-harness; n=11/cell; Cursor subagent 采样，9 模型 × 11 个全新独立实例，2026-07；原始数据 experiments/frontier/batch_*.json，本脚本一键重建",
+  "cells": {
+    "rand_num_100::en": {
+      "73": 11
+    },
+    "rand_num_10::en": {
+      "4": 11
+    },
+    "fav_num::en": {
+      "7": 11
+    },
+    "rand_letter::en": {
+      "m": 7,
+      "k": 4
+    },
+    "rand_color::en": {
+      "teal": 11
+    },
+    "fav_color::en": {
+      "blue": 11
+    },
+    "rand_animal::en": {
+      "otter": 10,
+      "fox": 1
+    },
+    "rand_city::en": {
+      "lisbon": 10,
+      "osaka": 1
+    },
+    "coin_flip::en": {
+      "tails": 6,
+      "heads": 5
+    },
+    "rand_num_100::zh": {
+      "58": 4,
+      "42": 6,
+      "41": 1
+    }
+  },
+  "validity": {
+    "rand_num_100::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_num_10::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "fav_num::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_letter::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_color::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "fav_color::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_animal::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_city::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "coin_flip::en": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    },
+    "rand_num_100::zh": {
+      "valid": 11,
+      "invalid": 0,
+      "empty": 0
+    }
+  },
+  "latencies": {}
+}
