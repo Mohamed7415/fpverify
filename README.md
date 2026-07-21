@@ -240,6 +240,41 @@ On top of it, this project adds the sequential e-process decision layer (early
 stopping + anytime-valid FPR control), adversarial hardening (multilingual paraphrase
 probes, cache/latency screening), auto-calibration, and the frontier-model study above.
 
+## Related tools, and what's actually different here
+
+Relay auditing is an active space (which validates the problem). The closest tools,
+honestly summarized:
+
+| Tool | Approach | Verdict type |
+|---|---|---|
+| [api-relay-audit](https://github.com/toby-bridges/api-relay-audit) | security scan: injection, SSE integrity, identity keywords | substitution treated as *"signals, not proof"* |
+| [veridrop](https://github.com/canarybyte/veridrop) | protocol conformance + **Claude thinking-signature** (cryptographic) + usage-field forensics | strong for Claude; protocol-level elsewhere |
+| [RelayRadar (AI45Lab)](https://github.com/AI45Lab/RelayRadar) | adaptive discriminative prompts (AB3IT), TVD + permutation p-values | fixed-sample hypothesis test |
+| [relay-radar (AetherCore)](https://github.com/AetherCore-Dev/relay-radar) | passive style monitoring + LLMmap probes | accuracy-style score |
+| [zing](https://github.com/cenbonew/zing) | capability/knowledge profiles (context window, tokenizer, cutoff) | profile consistency check |
+| [KBF (arXiv:2605.29524)](https://arxiv.org/abs/2605.29524) | knowledge-boundary numerical recall | fixed-sample binomial test |
+
+What `fpverify` adds that none of the above have:
+
+1. **Anytime-valid sequential decision** — the e-process verdict keeps FPR ≤ α at *any*
+   stopping point, enabling early stopping (~15 queries for blatant swaps) and, more
+   importantly, **continuous low-rate passive auditing** — the only regime that survives
+   account-level adaptive routing (see the co-evolution ledger). Fixed-sample tests
+   can't be re-run continuously without silently inflating their error rates.
+2. **Auto-calibrated benign-drift tolerance** (Dirichlet posterior-predictive) — the
+   "don't false-accuse honest cross-provider deployments" problem is solved by
+   calibration, not by a hand-tuned threshold.
+3. **A July-2026 frontier fingerprint study with platform-guaranteed identity** (9
+   models × 11 fresh instances, raw data committed, one-command reproduction) — not
+   folklore probes against last year's models.
+4. **An adversarial breaking-point analysis** — we tell you *where detection fails*
+   (random dilution ε ≈ 0.20–0.28, catching ε costs ~1/ε² samples) instead of implying
+   the detector is unbeatable.
+
+Complementary, not exclusive: veridrop's Claude signature check is cryptographic — if
+you audit Claude endpoints, run both. Behavioral fingerprints are the layer that works
+for *every* model with no server-side cooperation.
+
 ## Project layout
 
 ```

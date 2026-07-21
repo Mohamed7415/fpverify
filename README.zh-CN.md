@@ -203,6 +203,35 @@ py -3.13 -X utf8 -m webui.server             # 自动打开 http://127.0.0.1:876
 序贯 e-process 决策层（早停 + anytime-valid FPR 控制）、对抗加固（多语言改写探针、
 缓存/延迟筛查）、自动标定，以及上面的前沿模型实测研究。
 
+## 相关工具,以及我们真正不同的地方
+
+中转站审计是个活跃赛道(恰好证明这个痛点是真的)。最接近的几个工具,如实对比:
+
+| 工具 | 思路 | 判定类型 |
+|---|---|---|
+| [api-relay-audit](https://github.com/toby-bridges/api-relay-audit) | 安全扫描:注入/SSE 完整性/身份关键词 | 换模只算*"信号,非证据"* |
+| [veridrop](https://github.com/canarybyte/veridrop) | 协议一致性 + **Claude thinking 签名**(密码学级)+ usage 字段取证 | Claude 最强;其余协议级 |
+| [RelayRadar (AI45Lab)](https://github.com/AI45Lab/RelayRadar) | 自适应判别探针(AB3IT),TVD + 置换检验 p 值 | 固定样本假设检验 |
+| [relay-radar (AetherCore)](https://github.com/AetherCore-Dev/relay-radar) | 被动风格监控 + LLMmap 探针 | 准确率式打分 |
+| [zing](https://github.com/cenbonew/zing) | 能力/知识画像(上下文窗、tokenizer、知识截止) | 画像一致性检查 |
+| [KBF (arXiv:2605.29524)](https://arxiv.org/abs/2605.29524) | 知识边界数值召回 | 固定样本二项检验 |
+
+`fpverify` 有而以上全都没有的四样东西:
+
+1. **anytime-valid 序贯判定**——e-process 在*任意*停止点都保证 FPR ≤ α,所以能早停
+   (明显造假 ~15 次查询),更关键的是支持**持续低频被动审计**——这是唯一能对付
+   账号级智能分流的形态(见协同进化台账)。固定样本检验反复跑会悄悄膨胀错误率,
+   这件事它们做不了。
+2. **良性漂移容差自动标定**(Dirichlet 后验预测)——"别冤枉跨服务商的诚实部署"
+   靠标定解决,不靠手调阈值。
+3. **2026 年 7 月的前沿模型指纹实测,模型身份由平台保证**(9 模型 × 11 全新实例,
+   原始数据全提交、一条命令复现)——不是拿去年的模型跑民间偏方。
+4. **对抗极限分析**——我们明说*检测在哪里失效*(随机稀释 ε≈0.20–0.28 是安全窗口,
+   抓 ε 要 ~1/ε² 样本),而不是暗示检测器无敌。
+
+互补而非互斥:veridrop 的 Claude 签名校验是密码学级的——审 Claude 端点建议两个
+一起跑。行为指纹是那层**对所有模型都生效、不需要服务端配合**的通用防线。
+
 ## 项目结构
 
 ```
