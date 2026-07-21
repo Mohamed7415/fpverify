@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 本地素材（公众号文章截图及切片，版权归原作者，不随仓库发布）
+微信图片_*.jpg
+slices/
+
+# 本地杂项
+*.tmp
+.DS_Store
+Thumbs.db

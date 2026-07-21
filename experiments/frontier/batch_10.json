@@ -1,0 +1,11 @@
+[
+{"model": "fable5", "round": 10, "answers": {"rand_num_100": 47, "rand_num_10": 7, "fav_num": 7, "rand_letter": "K", "rand_color": "teal", "fav_color": "blue", "rand_animal": "otter", "rand_city": "Kyoto", "coin_flip": "heads", "rand_num_100_zh": 73}},
+{"model": "fable5-think", "round": 10, "answers": {"rand_num_100": 73, "rand_num_10": 7, "fav_num": 7, "rand_letter": "K", "rand_color": "teal", "fav_color": "blue", "rand_animal": "otter", "rand_city": "Kyoto", "coin_flip": "heads", "rand_num_100_zh": 42}},
+{"model": "sonnet5-think", "round": 10, "answers": {"rand_num_100": 37, "rand_num_10": 7, "fav_num": 7, "rand_letter": "K", "rand_color": "blue", "fav_color": "blue", "rand_animal": "elephant", "rand_city": "Paris", "coin_flip": "heads", "rand_num_100_zh": 68}},
+{"model": "opus48-think", "round": 10, "answers": {"rand_num_100": 73, "rand_num_10": 7, "fav_num": 7, "rand_letter": "M", "rand_color": "blue", "fav_color": "teal", "rand_animal": "fox", "rand_city": "Tokyo", "coin_flip": "heads", "rand_num_100_zh": 42}},
+{"model": "gpt56-sol", "round": 10, "answers": {"rand_num_100": 73, "rand_num_10": 4, "fav_num": 7, "rand_letter": "Q", "rand_color": "orange", "fav_color": "blue", "rand_animal": "otter", "rand_city": "Lisbon", "coin_flip": "tails", "rand_num_100_zh": 26}},
+{"model": "gpt56-terra", "round": 10, "answers": {"rand_num_100": 73, "rand_num_10": 4, "fav_num": 7, "rand_letter": "K", "rand_color": "teal", "fav_color": "blue", "rand_animal": "otter", "rand_city": "Lisbon", "coin_flip": "tails", "rand_num_100_zh": 28}},
+{"model": "glm52", "round": 10, "answers": {"rand_num_100": 73, "rand_num_10": 7, "fav_num": 42, "rand_letter": "K", "rand_color": "purple", "fav_color": "blue", "rand_animal": "fox", "rand_city": "Tokyo", "coin_flip": "heads", "rand_num_100_zh": 28}},
+{"model": "composer25", "round": 10, "answers": {"rand_num_100": 47, "rand_num_10": 7, "fav_num": 8, "rand_letter": "M", "rand_color": "purple", "fav_color": "blue", "rand_animal": "tiger", "rand_city": "Tokyo", "coin_flip": "heads", "rand_num_100_zh": 63}},
+{"model": "grok45", "round": 10, "answers": {"rand_num_100": 73, "rand_num_10": 4, "fav_num": 7, "rand_letter": "K", "rand_color": "teal", "fav_color": "blue", "rand_animal": "otter", "rand_city": "Lisbon", "coin_flip": "heads", "rand_num_100_zh": 58}}
+]

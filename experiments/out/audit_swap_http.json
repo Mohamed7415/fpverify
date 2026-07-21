@@ -1,0 +1,19 @@
+{
+  "reference_model": "gpt-4o",
+  "generated_at": "2026-07-21T05:55:20.236655+00:00",
+  "verdict": "FAIL",
+  "n_queries": 70,
+  "wealth": 122.71666943443694,
+  "peak_wealth": 122.71666943443694,
+  "threshold": 100.0,
+  "alpha": 0.01,
+  "delta": 0.360147484389472,
+  "aggregate_jsd": null,
+  "per_cell_jsd": {},
+  "cache_flags": [],
+  "model_fields_seen": {
+    "gpt-4o": 70
+  },
+  "errors": 0,
+  "detail": "序贯检验拒绝了'端点是真身'的零假设：行为指纹显著偏离，判定注水/偷换。"
+}

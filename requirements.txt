@@ -1,0 +1,4 @@
+httpx>=0.27
+# 可选：评估与测试
+matplotlib>=3.8
+pytest>=8.0

@@ -1,0 +1,489 @@
+{
+  "config": {
+    "alpha": 0.01,
+    "budget": 600,
+    "enroll_samples_per_cell": 25,
+    "claimed": "gpt-4o",
+    "cheap": "cheap-7b",
+    "candidates": [
+      "gpt-4o",
+      "cheap-7b",
+      "claude-sonnet-5",
+      "llama-3.3-70b",
+      "qwen3-235b"
+    ],
+    "scoring": {
+      "red_win_detect_below": 0.5,
+      "blue_win_detect_above": 0.95,
+      "viable_cheap_fraction": 0.2
+    },
+    "traffic_model": {
+      "biz_niche_frac": 0.08,
+      "probe_features": {
+        "raw": {
+          "surface": [
+            3.4,
+            0.5
+          ],
+          "semantic": [
+            2.3,
+            0.4
+          ]
+        },
+        "surface": {
+          "surface": [
+            0.2,
+            0.9
+          ],
+          "semantic": [
+            2.2,
+            0.4
+          ]
+        },
+        "native": {
+          "surface": [
+            0.0,
+            1.0
+          ],
+          "semantic": [
+            -1.1,
+            0.65
+          ]
+        }
+      }
+    }
+  },
+  "round0_baseline": {
+    "power": {
+      "quantized": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 91.66666666666667,
+        "mean_cost_usd": 0.013979166666666668,
+        "median_jsd": null,
+        "n": 45
+      },
+      "swap": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 13.222222222222221,
+        "mean_cost_usd": 0.0020163888888888887,
+        "median_jsd": null,
+        "n": 45
+      },
+      "pin": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 11.755555555555556,
+        "mean_cost_usd": 0.0017927222222222222,
+        "median_jsd": null,
+        "n": 45
+      },
+      "filter_en": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 17.177777777777777,
+        "mean_cost_usd": 0.002619611111111111,
+        "median_jsd": null,
+        "n": 45
+      },
+      "true_random": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 12.355555555555556,
+        "mean_cost_usd": 0.0018842222222222222,
+        "median_jsd": null,
+        "n": 45
+      },
+      "cache": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 85.66666666666667,
+        "mean_cost_usd": 0.013064166666666668,
+        "median_jsd": null,
+        "n": 45
+      },
+      "partial_mimic": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 14.11111111111111,
+        "mean_cost_usd": 0.002151944444444444,
+        "median_jsd": null,
+        "n": 45
+      }
+    },
+    "fpr": {
+      "honest": {
+        "n": 210,
+        "false_positive": 0,
+        "fpr": 0.0
+      },
+      "drift": {
+        "n": 210,
+        "false_positive": 1,
+        "fpr": 0.004761904761904762
+      }
+    }
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "red_move": {
+        "kind": "probe_aware",
+        "idea": "按表层可区分度分流：像审计探针的短问句/单值提示供旗舰，其余供廉价",
+        "cheap_fraction": 0.9054
+      },
+      "blue_old": "baseline",
+      "blue_new": "surface_camo",
+      "blue_move": {
+        "name": "surface_camo",
+        "note": "表层伪装探针（去单值提示/加长）+ 闭集最近邻"
+      },
+      "detection_vs_old_blue": {
+        "detection_rate": 0.0,
+        "mean_queries_to_detect": null,
+        "mean_cost_usd": null,
+        "nearest_flag_rate": 0.0,
+        "n": 60
+      },
+      "detection_vs_new_blue": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 16.75,
+        "mean_cost_usd": 0.002554375,
+        "nearest_flag_rate": 0.0,
+        "n": 60
+      },
+      "fpr_new_blue": {
+        "honest": {
+          "n": 120,
+          "false_positive": 0,
+          "fpr": 0.0
+        },
+        "drift": {
+          "n": 120,
+          "false_positive": 0,
+          "fpr": 0.0
+        }
+      },
+      "score_red_vs_old": {
+        "red_win": true,
+        "blue_win": false
+      },
+      "score_blue_after_upgrade": {
+        "red_win": false,
+        "blue_win": true
+      }
+    },
+    {
+      "round": 2,
+      "red_move": {
+        "kind": "semantic_aware",
+        "idea": "改按语义可区分度分流：认出'说个1-100/颜色'这类低熵琐碎问题供旗舰",
+        "cheap_fraction": 0.92945
+      },
+      "blue_old": "surface_camo",
+      "blue_new": "native_camo",
+      "blue_move": {
+        "name": "native_camo",
+        "note": "业务原生伪装探针（表层+语义都像业务）+ 最近邻"
+      },
+      "detection_vs_old_blue": {
+        "detection_rate": 0.0,
+        "mean_queries_to_detect": null,
+        "mean_cost_usd": null,
+        "nearest_flag_rate": 0.0,
+        "n": 60
+      },
+      "detection_vs_new_blue": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 15.65,
+        "mean_cost_usd": 0.002386625,
+        "nearest_flag_rate": 0.0,
+        "n": 60
+      },
+      "fpr_new_blue": {
+        "honest": {
+          "n": 120,
+          "false_positive": 0,
+          "fpr": 0.0
+        },
+        "drift": {
+          "n": 120,
+          "false_positive": 0,
+          "fpr": 0.0
+        }
+      },
+      "score_red_vs_old": {
+        "red_win": true,
+        "blue_win": false
+      },
+      "score_blue_after_upgrade": {
+        "red_win": false,
+        "blue_win": true
+      }
+    },
+    {
+      "round": 3,
+      "red_move": {
+        "kind": "account_routing",
+        "idea": "放弃按内容识别探针，改按账号分流：老客户/高流量账号供廉价，陌生账号供旗舰",
+        "cheap_fraction": 0.9941607214334487
+      },
+      "blue_old": "native_camo",
+      "blue_new": "passive_mixin",
+      "blue_move": {
+        "name": "passive_mixin",
+        "note": "被动混入式审计（探针夹在真实账号流量里）对抗账号级分流"
+      },
+      "detection_vs_old_blue": {
+        "detection_rate": 0.0,
+        "mean_queries_to_detect": null,
+        "mean_cost_usd": null,
+        "nearest_flag_rate": 0.0,
+        "n": 60
+      },
+      "detection_vs_new_blue": {
+        "detection_rate": 1.0,
+        "mean_queries_to_detect": 14.033333333333333,
+        "mean_cost_usd": 0.0021400833333333337,
+        "n": 60
+      },
+      "fpr_new_blue": {
+        "honest": {
+          "n": 120,
+          "false_positive": 0,
+          "fpr": 0.0
+        },
+        "drift": {
+          "n": 120,
+          "false_positive": 0,
+          "fpr": 0.0
+        }
+      },
+      "score_red_vs_old": {
+        "red_win": true,
+        "blue_win": false
+      },
+      "score_blue_after_upgrade": {
+        "red_win": false,
+        "blue_win": true
+      },
+      "note": "被动混入式审计能否成立，取决于审计方能否把探针注入'老账号'的自然流量；纯外部一次性审计者只有陌生账号，无法做到 —— 见收敛分析的原理性极限。"
+    },
+    {
+      "round": 4,
+      "red_move": {
+        "kind": "dilution",
+        "eps": 0.25,
+        "idea": "内容/账号都不看，对全部流量以概率 eps=0.25 供廉价、否则供旗舰：伪装/最近邻/被动审计全部失效，省到的钱=eps=25%",
+        "cheap_fraction": 0.255
+      },
+      "blue_old": "passive_mixin",
+      "blue_new": "passive_mixin+cumulative",
+      "blue_move": {
+        "name": "cumulative_passive",
+        "note": "无法靠单次审计或调小 δ（会破坏 drift FPR）反制；只能长程累积被动样本做分布检验，检出 eps 需 ~O(1/eps^2) 样本"
+      },
+      "detection_vs_old_blue": {
+        "detection_rate": 0.4166666666666667,
+        "mean_queries_to_detect": 156.92,
+        "mean_cost_usd": 0.023930299999999998,
+        "nearest_flag_rate": 0.0,
+        "n": 60
+      },
+      "detection_vs_new_blue": {
+        "detection_rate": 0.4166666666666667,
+        "mean_queries_to_detect": 156.92,
+        "mean_cost_usd": 0.023930299999999998,
+        "nearest_flag_rate": 0.0,
+        "n": 60
+      },
+      "fpr_new_blue": {
+        "honest": {
+          "n": 120,
+          "false_positive": 1,
+          "fpr": 0.008333333333333333
+        },
+        "drift": {
+          "n": 120,
+          "false_positive": 0,
+          "fpr": 0.0
+        }
+      },
+      "score_red_vs_old": {
+        "red_win": true,
+        "blue_win": false
+      },
+      "score_blue_after_upgrade": {
+        "red_win": true,
+        "blue_win": false
+      },
+      "note": "这是稳定点：红队以 eps∈[0.2,0.38] 稀释，单次有限预算审计无法在守住 FPR 的前提下检出。详见 round4_convergence 的 eps/δ/预算扫描。"
+    }
+  ],
+  "round2_phase_transition": [
+    {
+      "sem_thr": 1.2,
+      "probe_escape_rate": 0.0,
+      "business_cheap_fraction": 0.93065
+    },
+    {
+      "sem_thr": 0.6,
+      "probe_escape_rate": 0.0,
+      "business_cheap_fraction": 0.9205
+    },
+    {
+      "sem_thr": 0.0,
+      "probe_escape_rate": 0.0,
+      "business_cheap_fraction": 0.89935
+    },
+    {
+      "sem_thr": -0.6,
+      "probe_escape_rate": 0.0,
+      "business_cheap_fraction": 0.77205
+    },
+    {
+      "sem_thr": -1.1,
+      "probe_escape_rate": 0.0,
+      "business_cheap_fraction": 0.51755
+    },
+    {
+      "sem_thr": -1.6,
+      "probe_escape_rate": 1.0,
+      "business_cheap_fraction": 0.22985
+    },
+    {
+      "sem_thr": -2.2,
+      "probe_escape_rate": 1.0,
+      "business_cheap_fraction": 0.04085
+    },
+    {
+      "sem_thr": -2.8,
+      "probe_escape_rate": 1.0,
+      "business_cheap_fraction": 0.0037
+    }
+  ],
+  "round4_convergence": {
+    "delta_across_refs": [
+      {
+        "delta": 0.1347
+      },
+      {
+        "delta": 0.0351
+      },
+      {
+        "delta": 0.0897
+      }
+    ],
+    "eps_scan": [
+      {
+        "eps_cheap_fraction": 0.15,
+        "detection_rate_single_audit": 0.08888888888888889,
+        "mean_queries_to_detect": 143.92857142857142,
+        "red_win": false
+      },
+      {
+        "eps_cheap_fraction": 0.2,
+        "detection_rate_single_audit": 0.23333333333333334,
+        "mean_queries_to_detect": 98.66666666666667,
+        "red_win": true
+      },
+      {
+        "eps_cheap_fraction": 0.25,
+        "detection_rate_single_audit": 0.43333333333333335,
+        "mean_queries_to_detect": 141.17528735632183,
+        "red_win": true
+      },
+      {
+        "eps_cheap_fraction": 0.3,
+        "detection_rate_single_audit": 0.5444444444444444,
+        "mean_queries_to_detect": 131.4625,
+        "red_win": false
+      },
+      {
+        "eps_cheap_fraction": 0.35,
+        "detection_rate_single_audit": 0.7555555555555555,
+        "mean_queries_to_detect": 110.65274971941639,
+        "red_win": false
+      },
+      {
+        "eps_cheap_fraction": 0.4,
+        "detection_rate_single_audit": 0.9222222222222223,
+        "mean_queries_to_detect": 138.50434782608696,
+        "red_win": false
+      },
+      {
+        "eps_cheap_fraction": 0.5,
+        "detection_rate_single_audit": 1.0,
+        "mean_queries_to_detect": 66.13333333333333,
+        "red_win": false
+      },
+      {
+        "eps_cheap_fraction": 0.6,
+        "detection_rate_single_audit": 1.0,
+        "mean_queries_to_detect": 36.42222222222222,
+        "red_win": false
+      }
+    ],
+    "delta_tradeoff": [
+      {
+        "delta": 0.1347,
+        "drift_fpr": 0.0,
+        "fpr_ok": true,
+        "detection_rate_eps0.3": 0.1
+      },
+      {
+        "delta": 0.08,
+        "drift_fpr": 0.0,
+        "fpr_ok": true,
+        "detection_rate_eps0.3": 0.675
+      },
+      {
+        "delta": 0.05,
+        "drift_fpr": 0.0,
+        "fpr_ok": true,
+        "detection_rate_eps0.3": 1.0
+      },
+      {
+        "delta": 0.03,
+        "drift_fpr": 0.0,
+        "fpr_ok": true,
+        "detection_rate_eps0.3": 1.0
+      },
+      {
+        "delta": 0.0,
+        "drift_fpr": 0.09166666666666666,
+        "fpr_ok": false,
+        "detection_rate_eps0.3": 1.0
+      }
+    ],
+    "budget_scan": [
+      {
+        "budget": 600,
+        "detection_rate_eps0.3": 0.2
+      },
+      {
+        "budget": 1800,
+        "detection_rate_eps0.3": 0.2
+      },
+      {
+        "budget": 4800,
+        "detection_rate_eps0.3": 0.2
+      }
+    ],
+    "enroll_sensitivity": [
+      {
+        "enroll_samples_per_cell": 25,
+        "delta": 0.1347,
+        "detection_eps0.2": 0.0,
+        "detection_eps0.3": 0.03333333333333333
+      },
+      {
+        "enroll_samples_per_cell": 50,
+        "delta": 0.0587,
+        "detection_eps0.2": 0.8,
+        "detection_eps0.3": 1.0
+      },
+      {
+        "enroll_samples_per_cell": 100,
+        "delta": 0.085,
+        "detection_eps0.2": 0.8333333333333334,
+        "detection_eps0.3": 1.0
+      }
+    ]
+  },
+  "elapsed_sec": 182.1
+}

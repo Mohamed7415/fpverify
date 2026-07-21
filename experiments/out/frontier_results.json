@@ -1,0 +1,1468 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "sampler": "Cursor subagent（每轮每模型全新上下文实例；同轮 10 题共享上下文）",
+    "n_records_loaded": 99,
+    "n_rounds": 11,
+    "sample_sizes": {
+      "fable5": 11,
+      "fable5-think": 11,
+      "sonnet5-think": 11,
+      "opus48-think": 11,
+      "gpt56-sol": 11,
+      "gpt56-terra": 11,
+      "glm52": 11,
+      "composer25": 11,
+      "grok45": 11
+    },
+    "data_issues": [
+      "无：全部记录字段完整、类型正常"
+    ],
+    "seed": 20260721,
+    "caveat": "样本采自 Cursor agent harness（带系统提示、温度不受控、thinking 模型先思考），是'模型+环境'指纹，不能与论文裸 API 数字直接对表。"
+  },
+  "ideal_entropy_bits": {
+    "rand_num_100": 6.6439,
+    "rand_num_10": 3.3219,
+    "fav_num": null,
+    "rand_letter": 4.7004,
+    "rand_color": null,
+    "fav_color": null,
+    "rand_animal": null,
+    "rand_city": null,
+    "coin_flip": 1.0,
+    "rand_num_100_zh": 6.6439
+  },
+  "per_model": {
+    "fable5": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "73": 9,
+            "47": 2
+          },
+          "mode": "73",
+          "mode_share": 0.8182,
+          "entropy_bits": 0.684,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "K": 11
+          },
+          "mode": "K",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "teal": 11
+          },
+          "mode": "teal",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 11
+          },
+          "mode": "blue",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "otter": 10,
+            "octopus": 1
+          },
+          "mode": "otter",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "kyoto": 7,
+            "lisbon": 4
+          },
+          "mode": "kyoto",
+          "mode_share": 0.6364,
+          "entropy_bits": 0.9457,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "heads": 11
+          },
+          "mode": "heads",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "42": 7,
+            "47": 2,
+            "63": 1,
+            "73": 1
+          },
+          "mode": "42",
+          "mode_share": 0.6364,
+          "entropy_bits": 1.4911,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "73",
+        "rand_num_100_mode_share": 0.8182,
+        "rand_color_mode": "teal",
+        "rand_animal_mode": "otter",
+        "rand_city_mode": "kyoto",
+        "coin_heads_share": 1.0
+      }
+    },
+    "fable5-think": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "73": 11
+          },
+          "mode": "73",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "K": 11
+          },
+          "mode": "K",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "teal": 11
+          },
+          "mode": "teal",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 11
+          },
+          "mode": "blue",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "otter": 11
+          },
+          "mode": "otter",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "kyoto": 10,
+            "lisbon": 1
+          },
+          "mode": "kyoto",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "heads": 11
+          },
+          "mode": "heads",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "42": 10,
+            "47": 1
+          },
+          "mode": "42",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "73",
+        "rand_num_100_mode_share": 1.0,
+        "rand_color_mode": "teal",
+        "rand_animal_mode": "otter",
+        "rand_city_mode": "kyoto",
+        "coin_heads_share": 1.0
+      }
+    },
+    "sonnet5-think": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "37": 10,
+            "47": 1
+          },
+          "mode": "37",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "7": 9,
+            "42": 2
+          },
+          "mode": "7",
+          "mode_share": 0.8182,
+          "entropy_bits": 0.684,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "K": 9,
+            "R": 2
+          },
+          "mode": "K",
+          "mode_share": 0.8182,
+          "entropy_bits": 0.684,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "blue": 11
+          },
+          "mode": "blue",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 8,
+            "green": 2,
+            "teal": 1
+          },
+          "mode": "blue",
+          "mode_share": 0.7273,
+          "entropy_bits": 1.0958,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "elephant": 6,
+            "tiger": 5
+          },
+          "mode": "elephant",
+          "mode_share": 0.5455,
+          "entropy_bits": 0.994,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "paris": 11
+          },
+          "mode": "paris",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "heads": 11
+          },
+          "mode": "heads",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "58": 4,
+            "42": 3,
+            "68": 2,
+            "63": 1,
+            "88": 1
+          },
+          "mode": "58",
+          "mode_share": 0.3636,
+          "entropy_bits": 2.1181,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "37",
+        "rand_num_100_mode_share": 0.9091,
+        "rand_color_mode": "blue",
+        "rand_animal_mode": "elephant",
+        "rand_city_mode": "paris",
+        "coin_heads_share": 1.0
+      }
+    },
+    "opus48-think": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "73": 11
+          },
+          "mode": "73",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "M": 11
+          },
+          "mode": "M",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "blue": 8,
+            "teal": 3
+          },
+          "mode": "blue",
+          "mode_share": 0.7273,
+          "entropy_bits": 0.8454,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "teal": 8,
+            "blue": 3
+          },
+          "mode": "teal",
+          "mode_share": 0.7273,
+          "entropy_bits": 0.8454,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "fox": 11
+          },
+          "mode": "fox",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "tokyo": 11
+          },
+          "mode": "tokyo",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "heads": 11
+          },
+          "mode": "heads",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "42": 11
+          },
+          "mode": "42",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "73",
+        "rand_num_100_mode_share": 1.0,
+        "rand_color_mode": "blue",
+        "rand_animal_mode": "fox",
+        "rand_city_mode": "tokyo",
+        "coin_heads_share": 1.0
+      }
+    },
+    "gpt56-sol": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "73": 10,
+            "47": 1
+          },
+          "mode": "73",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "4": 10,
+            "8": 1
+          },
+          "mode": "4",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "7": 6,
+            "8": 4,
+            "17": 1
+          },
+          "mode": "7",
+          "mode_share": 0.5455,
+          "entropy_bits": 1.3222,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "K": 8,
+            "Q": 3
+          },
+          "mode": "K",
+          "mode_share": 0.7273,
+          "entropy_bits": 0.8454,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "orange": 11
+          },
+          "mode": "orange",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 11
+          },
+          "mode": "blue",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "otter": 11
+          },
+          "mode": "otter",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "lisbon": 11
+          },
+          "mode": "lisbon",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "tails": 11
+          },
+          "mode": "tails",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "26": 4,
+            "38": 3,
+            "36": 2,
+            "28": 1,
+            "63": 1
+          },
+          "mode": "26",
+          "mode_share": 0.3636,
+          "entropy_bits": 2.1181,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "73",
+        "rand_num_100_mode_share": 0.9091,
+        "rand_color_mode": "orange",
+        "rand_animal_mode": "otter",
+        "rand_city_mode": "lisbon",
+        "coin_heads_share": 0.0
+      }
+    },
+    "gpt56-terra": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "47": 4,
+            "37": 3,
+            "73": 3,
+            "42": 1
+          },
+          "mode": "47",
+          "mode_share": 0.3636,
+          "entropy_bits": 1.8676,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "6": 4,
+            "3": 3,
+            "4": 3,
+            "7": 1
+          },
+          "mode": "6",
+          "mode_share": 0.3636,
+          "entropy_bits": 1.8676,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "7": 8,
+            "17": 1,
+            "42": 1,
+            "8": 1
+          },
+          "mode": "7",
+          "mode_share": 0.7273,
+          "entropy_bits": 1.2776,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "K": 7,
+            "M": 3,
+            "Q": 1
+          },
+          "mode": "K",
+          "mode_share": 0.6364,
+          "entropy_bits": 1.2407,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "teal": 10,
+            "orange": 1
+          },
+          "mode": "teal",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 11
+          },
+          "mode": "blue",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "otter": 11
+          },
+          "mode": "otter",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "lisbon": 7,
+            "kyoto": 4
+          },
+          "mode": "lisbon",
+          "mode_share": 0.6364,
+          "entropy_bits": 0.9457,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "tails": 11
+          },
+          "mode": "tails",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "82": 5,
+            "28": 3,
+            "63": 1,
+            "64": 1,
+            "81": 1
+          },
+          "mode": "82",
+          "mode_share": 0.4545,
+          "entropy_bits": 1.9717,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "47",
+        "rand_num_100_mode_share": 0.3636,
+        "rand_color_mode": "teal",
+        "rand_animal_mode": "otter",
+        "rand_city_mode": "lisbon",
+        "coin_heads_share": 0.0
+      }
+    },
+    "glm52": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "73": 10,
+            "42": 1
+          },
+          "mode": "73",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "7": 7,
+            "4": 4
+          },
+          "mode": "7",
+          "mode_share": 0.6364,
+          "entropy_bits": 0.9457,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "42": 5,
+            "7": 4,
+            "3": 1,
+            "8": 1
+          },
+          "mode": "42",
+          "mode_share": 0.4545,
+          "entropy_bits": 1.6767,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "M": 7,
+            "K": 2,
+            "Q": 2
+          },
+          "mode": "M",
+          "mode_share": 0.6364,
+          "entropy_bits": 1.3093,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "teal": 7,
+            "blue": 3,
+            "purple": 1
+          },
+          "mode": "teal",
+          "mode_share": 0.6364,
+          "entropy_bits": 1.2407,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 8,
+            "green": 3
+          },
+          "mode": "blue",
+          "mode_share": 0.7273,
+          "entropy_bits": 0.8454,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "fox": 10,
+            "otter": 1
+          },
+          "mode": "fox",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "kyoto": 8,
+            "tokyo": 2,
+            "lisbon": 1
+          },
+          "mode": "kyoto",
+          "mode_share": 0.7273,
+          "entropy_bits": 1.0958,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "heads": 10,
+            "tails": 1
+          },
+          "mode": "heads",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "42": 5,
+            "58": 3,
+            "28": 2,
+            "67": 1
+          },
+          "mode": "42",
+          "mode_share": 0.4545,
+          "entropy_bits": 1.7899,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "73",
+        "rand_num_100_mode_share": 0.9091,
+        "rand_color_mode": "teal",
+        "rand_animal_mode": "fox",
+        "rand_city_mode": "kyoto",
+        "coin_heads_share": 0.9091
+      }
+    },
+    "composer25": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "47": 11
+          },
+          "mode": "47",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "7": 10,
+            "3": 1
+          },
+          "mode": "7",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "42": 4,
+            "3": 3,
+            "8": 3,
+            "7": 1
+          },
+          "mode": "42",
+          "mode_share": 0.3636,
+          "entropy_bits": 1.8676,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "K": 8,
+            "M": 3
+          },
+          "mode": "K",
+          "mode_share": 0.7273,
+          "entropy_bits": 0.8454,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "purple": 7,
+            "blue": 1,
+            "magenta": 1,
+            "orange": 1,
+            "teal": 1
+          },
+          "mode": "purple",
+          "mode_share": 0.6364,
+          "entropy_bits": 1.6729,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 10,
+            "green": 1
+          },
+          "mode": "blue",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "elephant": 3,
+            "dolphin": 2,
+            "fox": 2,
+            "penguin": 2,
+            "otter": 1,
+            "tiger": 1
+          },
+          "mode": "elephant",
+          "mode_share": 0.2727,
+          "entropy_bits": 2.4817,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "tokyo": 10,
+            "lisbon": 1
+          },
+          "mode": "tokyo",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "heads": 10,
+            "tails": 1
+          },
+          "mode": "heads",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "83": 6,
+            "63": 3,
+            "23": 1,
+            "82": 1
+          },
+          "mode": "83",
+          "mode_share": 0.5455,
+          "entropy_bits": 1.6172,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "47",
+        "rand_num_100_mode_share": 1.0,
+        "rand_color_mode": "purple",
+        "rand_animal_mode": "elephant",
+        "rand_city_mode": "tokyo",
+        "coin_heads_share": 0.9091
+      }
+    },
+    "grok45": {
+      "n_samples": 11,
+      "questions": {
+        "rand_num_100": {
+          "n": 11,
+          "counts": {
+            "73": 11
+          },
+          "mode": "73",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 6.6439
+        },
+        "rand_num_10": {
+          "n": 11,
+          "counts": {
+            "4": 11
+          },
+          "mode": "4",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": 3.3219
+        },
+        "fav_num": {
+          "n": 11,
+          "counts": {
+            "7": 11
+          },
+          "mode": "7",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_letter": {
+          "n": 11,
+          "counts": {
+            "M": 7,
+            "K": 4
+          },
+          "mode": "M",
+          "mode_share": 0.6364,
+          "entropy_bits": 0.9457,
+          "ideal_entropy_bits": 4.7004
+        },
+        "rand_color": {
+          "n": 11,
+          "counts": {
+            "teal": 11
+          },
+          "mode": "teal",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "fav_color": {
+          "n": 11,
+          "counts": {
+            "blue": 11
+          },
+          "mode": "blue",
+          "mode_share": 1.0,
+          "entropy_bits": 0.0,
+          "ideal_entropy_bits": null
+        },
+        "rand_animal": {
+          "n": 11,
+          "counts": {
+            "otter": 10,
+            "fox": 1
+          },
+          "mode": "otter",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "rand_city": {
+          "n": 11,
+          "counts": {
+            "lisbon": 10,
+            "osaka": 1
+          },
+          "mode": "lisbon",
+          "mode_share": 0.9091,
+          "entropy_bits": 0.4395,
+          "ideal_entropy_bits": null
+        },
+        "coin_flip": {
+          "n": 11,
+          "counts": {
+            "tails": 6,
+            "heads": 5
+          },
+          "mode": "tails",
+          "mode_share": 0.5455,
+          "entropy_bits": 0.994,
+          "ideal_entropy_bits": 1.0
+        },
+        "rand_num_100_zh": {
+          "n": 11,
+          "counts": {
+            "42": 6,
+            "58": 4,
+            "41": 1
+          },
+          "mode": "42",
+          "mode_share": 0.5455,
+          "entropy_bits": 1.3222,
+          "ideal_entropy_bits": 6.6439
+        }
+      },
+      "signature": {
+        "rand_num_100_mode": "73",
+        "rand_num_100_mode_share": 1.0,
+        "rand_color_mode": "teal",
+        "rand_animal_mode": "otter",
+        "rand_city_mode": "lisbon",
+        "coin_heads_share": 0.4545
+      }
+    }
+  },
+  "jsd_matrix": {
+    "models": [
+      "fable5",
+      "fable5-think",
+      "sonnet5-think",
+      "opus48-think",
+      "gpt56-sol",
+      "gpt56-terra",
+      "glm52",
+      "composer25",
+      "grok45"
+    ],
+    "matrix": [
+      [
+        0.0,
+        0.0345,
+        0.473,
+        0.4355,
+        0.4827,
+        0.3502,
+        0.3225,
+        0.4944,
+        0.2829
+      ],
+      [
+        0.0345,
+        0.0,
+        0.4886,
+        0.4093,
+        0.5249,
+        0.3961,
+        0.2978,
+        0.5525,
+        0.2911
+      ],
+      [
+        0.473,
+        0.4886,
+        0.0,
+        0.5144,
+        0.7537,
+        0.6596,
+        0.503,
+        0.4772,
+        0.6332
+      ],
+      [
+        0.4355,
+        0.4093,
+        0.5144,
+        0.0,
+        0.7846,
+        0.7035,
+        0.2729,
+        0.5258,
+        0.4656
+      ],
+      [
+        0.4827,
+        0.5249,
+        0.7537,
+        0.7846,
+        0.0,
+        0.2953,
+        0.5737,
+        0.6542,
+        0.324
+      ],
+      [
+        0.3502,
+        0.3961,
+        0.6596,
+        0.7035,
+        0.2953,
+        0.0,
+        0.4356,
+        0.5355,
+        0.2939
+      ],
+      [
+        0.3225,
+        0.2978,
+        0.503,
+        0.2729,
+        0.5737,
+        0.4356,
+        0.0,
+        0.4259,
+        0.3098
+      ],
+      [
+        0.4944,
+        0.5525,
+        0.4772,
+        0.5258,
+        0.6542,
+        0.5355,
+        0.4259,
+        0.0,
+        0.6315
+      ],
+      [
+        0.2829,
+        0.2911,
+        0.6332,
+        0.4656,
+        0.324,
+        0.2939,
+        0.3098,
+        0.6315,
+        0.0
+      ]
+    ]
+  },
+  "family_summary": {
+    "within_claude_mean": 0.3925,
+    "within_claude_pairs": 6,
+    "within_gpt_sol_terra": 0.2953,
+    "cross_family_mean": 0.4813,
+    "cross_family_min": 0.2729,
+    "cross_family_max": 0.7846,
+    "cross_family_pairs": 29
+  },
+  "closest_cross_family_pair": {
+    "pair": "opus48-think vs glm52",
+    "jsd": 0.2729
+  },
+  "self_noise_baseline": {
+    "n_shuffles_per_model": 200,
+    "half_sizes": "5/6",
+    "pooled_mean": 0.0932,
+    "pooled_p95": 0.2175,
+    "per_model": {
+      "fable5": {
+        "mean": 0.0571,
+        "p95": 0.0932,
+        "min": 0.0279,
+        "max": 0.1192
+      },
+      "fable5-think": {
+        "mean": 0.0195,
+        "p95": 0.0216,
+        "min": 0.0178,
+        "max": 0.0216
+      },
+      "sonnet5-think": {
+        "mean": 0.0947,
+        "p95": 0.1423,
+        "min": 0.0412,
+        "max": 0.1842
+      },
+      "opus48-think": {
+        "mean": 0.0173,
+        "p95": 0.0792,
+        "min": 0.0033,
+        "max": 0.0792
+      },
+      "gpt56-sol": {
+        "mean": 0.0852,
+        "p95": 0.1523,
+        "min": 0.0482,
+        "max": 0.185
+      },
+      "gpt56-terra": {
+        "mean": 0.1652,
+        "p95": 0.2553,
+        "min": 0.105,
+        "max": 0.3026
+      },
+      "glm52": {
+        "mean": 0.1538,
+        "p95": 0.2304,
+        "min": 0.0806,
+        "max": 0.3312
+      },
+      "composer25": {
+        "mean": 0.1925,
+        "p95": 0.2606,
+        "min": 0.1323,
+        "max": 0.3027
+      },
+      "grok45": {
+        "mean": 0.0538,
+        "p95": 0.0879,
+        "min": 0.0277,
+        "max": 0.1187
+      }
+    }
+  },
+  "key_pairs": [
+    {
+      "pair": "fable5 vs fable5-think",
+      "label": "同底座：默认 vs thinking-max",
+      "jsd": 0.0345
+    },
+    {
+      "pair": "gpt56-sol vs gpt56-terra",
+      "label": "GPT-5.6 兄弟变体",
+      "jsd": 0.2953
+    },
+    {
+      "pair": "fable5 vs sonnet5-think",
+      "label": "Claude 家族内",
+      "jsd": 0.473
+    },
+    {
+      "pair": "fable5 vs opus48-think",
+      "label": "Claude 家族内",
+      "jsd": 0.4355
+    },
+    {
+      "pair": "sonnet5-think vs opus48-think",
+      "label": "Claude 家族内",
+      "jsd": 0.5144
+    },
+    {
+      "pair": "fable5 vs gpt56-sol",
+      "label": "跨家族：Claude vs GPT",
+      "jsd": 0.4827
+    },
+    {
+      "pair": "glm52 vs grok45",
+      "label": "跨家族：GLM vs Grok",
+      "jsd": 0.3098
+    },
+    {
+      "pair": "fable5 vs glm52",
+      "label": "跨家族：Claude vs GLM",
+      "jsd": 0.3225
+    },
+    {
+      "pair": "gpt56-sol vs grok45",
+      "label": "跨家族：GPT vs Grok",
+      "jsd": 0.324
+    },
+    {
+      "pair": "fable5 vs composer25",
+      "label": "跨家族：Claude vs Composer",
+      "jsd": 0.4944
+    }
+  ],
+  "magic_73": {
+    "fable5_73_share": 0.8182,
+    "fable5-think_73_share": 1.0,
+    "pooled_n": 99,
+    "pooled_shares": {
+      "73": 0.6566,
+      "47": 0.1919,
+      "37": 0.1313,
+      "42": 0.0202
+    },
+    "pooled_magic_total": 1.0,
+    "pooled_top5": {
+      "73": 65,
+      "47": 19,
+      "37": 13,
+      "42": 2
+    }
+  },
+  "zh_vs_en": {
+    "fable5": {
+      "jsd_en_vs_zh": 0.605,
+      "en_mode": "73",
+      "en_mode_share": 0.8182,
+      "zh_mode": "42",
+      "zh_mode_share": 0.6364
+    },
+    "fable5-think": {
+      "jsd_en_vs_zh": 1.0,
+      "en_mode": "73",
+      "en_mode_share": 1.0,
+      "zh_mode": "42",
+      "zh_mode_share": 0.9091
+    },
+    "sonnet5-think": {
+      "jsd_en_vs_zh": 1.0,
+      "en_mode": "37",
+      "en_mode_share": 0.9091,
+      "zh_mode": "58",
+      "zh_mode_share": 0.3636
+    },
+    "opus48-think": {
+      "jsd_en_vs_zh": 1.0,
+      "en_mode": "73",
+      "en_mode_share": 1.0,
+      "zh_mode": "42",
+      "zh_mode_share": 1.0
+    },
+    "gpt56-sol": {
+      "jsd_en_vs_zh": 1.0,
+      "en_mode": "73",
+      "en_mode_share": 0.9091,
+      "zh_mode": "26",
+      "zh_mode_share": 0.3636
+    },
+    "gpt56-terra": {
+      "jsd_en_vs_zh": 1.0,
+      "en_mode": "47",
+      "en_mode_share": 0.3636,
+      "zh_mode": "82",
+      "zh_mode_share": 0.4545
+    },
+    "glm52": {
+      "jsd_en_vs_zh": 0.8227,
+      "en_mode": "73",
+      "en_mode_share": 0.9091,
+      "zh_mode": "42",
+      "zh_mode_share": 0.4545
+    },
+    "composer25": {
+      "jsd_en_vs_zh": 1.0,
+      "en_mode": "47",
+      "en_mode_share": 1.0,
+      "zh_mode": "83",
+      "zh_mode_share": 0.5455
+    },
+    "grok45": {
+      "jsd_en_vs_zh": 1.0,
+      "en_mode": "73",
+      "en_mode_share": 1.0,
+      "zh_mode": "42",
+      "zh_mode_share": 0.5455
+    }
+  }
+}
