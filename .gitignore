@@ -7,12 +7,12 @@ __pycache__/
 微信图片_*.jpg
 slices/
 
+# 本地运行产物（根目录下的 enroll/audit 输出；experiments/out 里的样例仍随仓库提交）
+/demo_ref.json
+/ref*.json
+/audit*.json
+
 # 本地杂项
 *.tmp
 .DS_Store
 Thumbs.db
-
-# 本地运行产物
-demo_ref.json
-ref*.json
-audit*.json
