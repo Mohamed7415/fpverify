@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use fpverify in your research, please cite it as below."
+title: "fpverify: behavioral fingerprint auditing for LLM API model substitution"
+type: software
+authors:
+  - name: "Mohamed7415 and fpverify contributors"
+repository-code: "https://github.com/Mohamed7415/fpverify"
+url: "https://github.com/Mohamed7415/fpverify"
+license: MIT
+version: 0.1.0
+date-released: "2026-07-21"
+keywords:
+  - large language models
+  - behavioral fingerprinting
+  - model substitution detection
+  - sequential hypothesis testing
+  - e-process
+  - API auditing
