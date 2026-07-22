@@ -26,7 +26,7 @@ is judged FAIL with probability ≤ α = 0.01, valid at any stopping point.
 ![Terminal demo: local mock relay — enroll, PASS the honest endpoint, early-stop FAIL the cheating one](docs/demo.gif)
 
 (Real run, not staged: both endpoints live on 127.0.0.1; the cheating one claims
-gpt-4o while serving a cheaper model. Regenerate with `experiments/make_demo_gif.py`.)
+claude-sonnet-5 while serving a cheaper model. Regenerate with `experiments/make_demo_gif.py`.)
 
 ## Usage
 
@@ -80,7 +80,7 @@ CLI equivalent:
 
 ```bash
 python -m fpverify.cli library        # list the fingerprint library
-python -m fpverify.cli identify --base-url https://relay.example/v1 --api-key KEY --model gpt-4o --samples 8
+python -m fpverify.cli identify --base-url https://relay.example/v1 --api-key KEY --model gpt-5.6 --samples 8
 ```
 
 Identification degrades in three steps: claimed model in the library → sequential
@@ -120,12 +120,12 @@ library involved; this is the strongest evidence mode.
 #    re-enroll after model version bumps)
 python -m fpverify.cli enroll \
     --base-url https://api.openai.com/v1 --api-key $OFFICIAL_KEY \
-    --model gpt-4o --samples 20 --out ref_gpt4o.json
+    --model gpt-5.6-sol --samples 20 --out ref_gpt56.json
 
 # 2. Audit any OpenAI-compatible endpoint claiming to serve that model
 python -m fpverify.cli audit \
     --base-url https://some-relay.example/v1 --api-key $RELAY_KEY \
-    --model gpt-4o --ref ref_gpt4o.json --report audit.json
+    --model gpt-5.6-sol --ref ref_gpt56.json --report audit.json
 ```
 
 Blatant substitution typically triggers early stopping within ~15 queries (~$0.002).
@@ -138,15 +138,15 @@ official key is enough):
 ```bash
 # Enroll model A from its official API
 python -m fpverify.cli enroll --base-url https://api.deepseek.com/v1 \
-    --api-key $KEY --model deepseek-chat --samples 20 --out ref_a.json
+    --api-key $KEY --model deepseek-v4-pro --samples 20 --out ref_a.json
 
 # Audit the SAME official endpoint against A's reference: must PASS
 python -m fpverify.cli audit --base-url https://api.deepseek.com/v1 \
-    --api-key $KEY --model deepseek-chat --ref ref_a.json
+    --api-key $KEY --model deepseek-v4-pro --ref ref_a.json
 
 # Audit a DIFFERENT model against A's reference: must FAIL
 python -m fpverify.cli audit --base-url https://api.deepseek.com/v1 \
-    --api-key $KEY --model deepseek-reasoner --ref ref_a.json
+    --api-key $KEY --model deepseek-v4-flash --ref ref_a.json
 ```
 
 If an official, direct-connection endpoint FAILs against its own freshly enrolled
@@ -156,22 +156,22 @@ reference, open an issue with the audit JSON; that would refute the FPR claim.
 
 This section validates the tool itself; no real service is involved.
 `sim/mock_server.py` starts fake endpoints on your machine: `--kind honest` answers
-with a gpt-4o-style distribution, `--kind swap` simulates a relay that claims gpt-4o
-but serves a cheaper model. Expected outcome: the first PASSes, the second FAILs
-within ~15 queries.
+from a built-in simulated distribution, `--kind swap` simulates a relay that claims
+claude-sonnet-5 but serves a cheaper model. Expected outcome: the first PASSes, the
+second FAILs within ~15 queries.
 
 ```bash
 pip install httpx
 
-python sim/mock_server.py --port 18801 --kind honest --model gpt-4o &
-python sim/mock_server.py --port 18802 --kind swap   --model gpt-4o &
+python sim/mock_server.py --port 18801 --kind honest --model claude-sonnet-5 &
+python sim/mock_server.py --port 18802 --kind swap   --model claude-sonnet-5 &
 
 python -m fpverify.cli enroll --base-url http://127.0.0.1:18801/v1 --api-key mock \
-    --model gpt-4o --out ref.json
+    --model claude-sonnet-5 --out ref.json
 python -m fpverify.cli audit  --base-url http://127.0.0.1:18801/v1 --api-key mock \
-    --model gpt-4o --ref ref.json     # PASS
+    --model claude-sonnet-5 --ref ref.json     # PASS
 python -m fpverify.cli audit  --base-url http://127.0.0.1:18802/v1 --api-key mock \
-    --model gpt-4o --ref ref.json     # FAIL
+    --model claude-sonnet-5 --ref ref.json     # FAIL
 ```
 
 The mock relay implements nine adversaries (`--kind`): `honest / drift / quantized /

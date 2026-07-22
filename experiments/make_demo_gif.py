@@ -30,22 +30,22 @@ PORT_HONEST, PORT_SWAP = 18801, 18802
 # 展示用命令（README 同款 ^ 续行写法，两行显示）与实际执行的 argv
 STEPS = [
     (("py -3.13 -X utf8 -m fpverify.cli enroll --base-url http://127.0.0.1:18801/v1 ^",
-      "      --api-key mock --model gpt-4o --out ref.json"),
+      "      --api-key mock --model claude-sonnet-5 --out ref.json"),
      ["-m", "fpverify.cli", "enroll", "--base-url", f"http://127.0.0.1:{PORT_HONEST}/v1",
-      "--api-key", "mock", "--model", "gpt-4o", "--out", "REF_PLACEHOLDER"]),
+      "--api-key", "mock", "--model", "claude-sonnet-5", "--out", "REF_PLACEHOLDER"]),
     (("py -3.13 -X utf8 -m fpverify.cli audit --base-url http://127.0.0.1:18801/v1 ^",
-      "      --api-key mock --model gpt-4o --ref ref.json"),
+      "      --api-key mock --model claude-sonnet-5 --ref ref.json"),
      ["-m", "fpverify.cli", "audit", "--base-url", f"http://127.0.0.1:{PORT_HONEST}/v1",
-      "--api-key", "mock", "--model", "gpt-4o", "--ref", "REF_PLACEHOLDER"]),
+      "--api-key", "mock", "--model", "claude-sonnet-5", "--ref", "REF_PLACEHOLDER"]),
     (("py -3.13 -X utf8 -m fpverify.cli audit --base-url http://127.0.0.1:18802/v1 ^",
-      "      --api-key mock --model gpt-4o --ref ref.json"),
+      "      --api-key mock --model claude-sonnet-5 --ref ref.json"),
      ["-m", "fpverify.cli", "audit", "--base-url", f"http://127.0.0.1:{PORT_SWAP}/v1",
-      "--api-key", "mock", "--model", "gpt-4o", "--ref", "REF_PLACEHOLDER"]),
+      "--api-key", "mock", "--model", "claude-sonnet-5", "--ref", "REF_PLACEHOLDER"]),
 ]
 
 BANNER = [
     "# 本地演示：全程 127.0.0.1，无真实服务参与",
-    "#   :18801 = 诚实端点（真 gpt-4o 分布）    :18802 = 作弊中转站（声称 gpt-4o，实际供便宜模型）",
+    "#   :18801 = 诚实端点（仿真 claude-sonnet-5 分布）  :18802 = 作弊中转站（声称同名，实际供便宜模型）",
 ]
 
 
@@ -71,7 +71,7 @@ def capture() -> list[tuple[str, list[str]]]:
         for port, kind in ((PORT_HONEST, "honest"), (PORT_SWAP, "swap")):
             servers.append(subprocess.Popen(
                 [sys.executable, "-X", "utf8", str(ROOT / "sim" / "mock_server.py"),
-                 "--port", str(port), "--kind", kind, "--model", "gpt-4o"],
+                 "--port", str(port), "--kind", kind, "--model", "claude-sonnet-5"],
                 cwd=ROOT, env=env,
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
             wait_health(port)
