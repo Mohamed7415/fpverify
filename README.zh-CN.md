@@ -18,6 +18,11 @@
 Jensen-Shannon 散度比对，由序贯下注检验（e-process）给出判定。误判率有上界：
 诚实端点被判 FAIL 的概率 ≤ α = 0.01，且在任意停止点成立。
 
+![终端演示：本机模拟中转站——入册参考、审诚实端点 PASS、审作弊端点早停 FAIL](docs/demo.gif)
+
+（上图为真实运行录制：两个端点都在 127.0.0.1，作弊端点声称 gpt-4o、实际供应
+便宜模型；可用 `experiments/make_demo_gif.py` 重新生成。）
+
 ## 使用
 
 下文命令为 Windows 写法；Linux / macOS 将 `py -3.13 -X utf8` 换成 `python`。

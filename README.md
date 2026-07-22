@@ -23,6 +23,11 @@ against a reference fingerprint (Jensen-Shannon divergence), and decides with a
 sequential betting test (e-process). The error rate is bounded: an honest endpoint
 is judged FAIL with probability ≤ α = 0.01, valid at any stopping point.
 
+![Terminal demo: local mock relay — enroll, PASS the honest endpoint, early-stop FAIL the cheating one](docs/demo.gif)
+
+(Real run, not staged: both endpoints live on 127.0.0.1; the cheating one claims
+gpt-4o while serving a cheaper model. Regenerate with `experiments/make_demo_gif.py`.)
+
 ## Usage
 
 Commands below use `python`; on Windows use `py -3.13 -X utf8` instead.
