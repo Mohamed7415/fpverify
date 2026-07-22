@@ -390,11 +390,19 @@ docs/         research notes (problem, threat model, method, experiments, fronti
 
 ## Roadmap
 
-The decision core (JSD + sequential e-process + calibration) is modality-agnostic:
-embed an image/video output, quantize it to a codebook, and the same machinery
-applies. Extending substitution detection to image/video generation APIs — with
-fixed-seed reproducibility as an extra signal — is the planned v2. Design in
-[`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md) §8; not implemented yet.
+- **Per-audit probe paraphrasing.** Probe phrasings currently come from a finite,
+  public template bank, so a relay could in principle hard-code rules for known
+  wordings (costs and failure modes are covered in the adversarial analysis:
+  pinned answers are caught in ~14 queries, and semantically perfect mimicry costs
+  about as much as running the real model). The plan is to generate fresh
+  paraphrases locally at audit time from a per-run seed, removing any stable
+  string for a rules file to match.
+- **Multimodal extension (v2).** The decision core (JSD + sequential e-process +
+  calibration) is modality-agnostic: embed an image/video output, quantize it to a
+  codebook, and the same machinery applies. Extending substitution detection to
+  image/video generation APIs — with fixed-seed reproducibility as an extra
+  signal — is the planned v2. Design in
+  [`docs/RESEARCH_NOTES.md`](docs/RESEARCH_NOTES.md) §8; not implemented yet.
 
 ## Limitations
 
