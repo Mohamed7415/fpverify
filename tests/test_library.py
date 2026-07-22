@@ -102,6 +102,41 @@ def test_identify_empty_channel_is_graceful(api_library):
     assert res.verdict == "INCONCLUSIVE"
 
 
+def test_nearest_attribution_gated_by_match_band():
+    """最近邻在一致带外时不得断言"疑似被替换为该模型"——闭集矮子将军只能报归属未知。
+
+    对应真实用户反馈：端点声称 GPT 却被指认换成了更贵的模型，经济学上荒谬；
+    实际多为库外便宜模型（蒸馏像老师）。"""
+    from collections import Counter
+    from fpverify.nearest import nearest_model
+
+    cell = ("coin_flip", "en")
+    enrolled = {"A": {cell: Counter({"a": 30})},
+                "B": {cell: Counter({"b": 30})}}
+
+    # 带外最近邻：与 B 半重叠、与 A 完全不相交 → nearest=B 但距离远
+    far = nearest_model({cell: Counter({"b": 15, "c": 15})}, enrolled, claimed="A")
+    assert far.flagged and far.nearest == "B"
+    assert far.nearest_distance > 0.18
+    assert "归属未知" in far.reason
+    assert "疑似被替换为该模型" not in far.reason
+
+    # 带内最近邻：与 B 同分布 → 保留强归属措辞
+    close = nearest_model({cell: Counter({"b": 30})}, enrolled, claimed="A")
+    assert close.flagged and close.nearest == "B"
+    assert close.nearest_distance <= 0.18
+    assert "疑似被替换为该模型或其近亲" in close.reason
+
+
+def test_identify_out_of_library_impostor_not_misattributed(api_library):
+    """库外便宜模型冒充 gpt-4o → FAIL 排除声称；只有最近邻落在一致带内才允许强归属。"""
+    ep = make_endpoint("honest", "cheap-7b", seed=45)
+    res = identify(ep, api_library, "gpt-4o", channel="api", samples_per_cell=8, seed=45)
+    assert res.verdict == "FAIL", f"{res.verdict}: {res.detail}"
+    if "疑似被替换为该模型" in res.detail:
+        assert res.nearest_distance is not None and res.nearest_distance <= res.bands["match"]
+
+
 # ---------------------------------------------------------------- 仓库自带 refs/
 
 def test_bundled_refs_load():
@@ -122,6 +157,7 @@ def test_bundled_refs_identify_harness_channel():
                    channel="cursor-harness", samples_per_cell=8, seed=51)
     assert res.claimed_entry == "fable5"
     assert res.verdict != "FAIL", f"{res.verdict}: {res.detail}"
+    assert "通道偏移" in res.warning, "harness 频道必须提示跨渠道偏移"
 
     res2 = identify(replay_endpoint(counts, 52), lib, "composer25",
                     channel="cursor-harness", samples_per_cell=8, seed=52)

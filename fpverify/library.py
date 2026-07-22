@@ -220,7 +220,8 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
     min_s = min(8, samples_per_cell)
     near = nearest_model(test_fp.counts(), refs,
                          claimed=claimed_entry.id if claimed_entry else claimed,
-                         min_samples=min_s, same_family=families)
+                         min_samples=min_s, same_family=families,
+                         match_band=BAND_MATCH)
     cache_flags = screen_response_cache(test_fp, min_samples=min_s)
     flags = [f"{c.cell[0]}::{c.cell[1]}" for c in cache_flags]
 
@@ -231,6 +232,14 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
         ranking=near.ranking, nearest=near.nearest,
         nearest_distance=near.nearest_distance, claimed_distance=near.claimed_distance,
         cache_flags=flags, observed_counts=test_fp.counts())
+
+    def _finish(r: IdentifyResult) -> IdentifyResult:
+        # harness 频道的参考采自 agent 通道，identify 却总是直连 HTTP——必然跨渠道
+        if "harness" in channel:
+            note = ("参考指纹采自 agent harness 通道，与直连 API 存在系统性通道偏移："
+                    "绝对距离整体偏大属预期，请侧重相对排名，归属以复核包双跑为准。")
+            r.warning = f"{r.warning}　{note}" if r.warning else note
+        return r
 
     # ---- 判定阶梯 ----
     if claimed_entry is not None and test is not None:
@@ -252,13 +261,13 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
         if flags and res.verdict != "FAIL":
             res.verdict = "FAIL"
             res.detail += " 另检出疑似响应级缓存（服务完整性违规，独立于指纹证据）。"
-        return res
+        return _finish(res)
 
     # 声称不在库里 → 纯识别降档
     if not near.ranking:
         res.verdict = "INCONCLUSIVE"
         res.detail = "有效样本不足，无法与库比对（可加大 --samples 或检查端点报错）。"
-        return res
+        return _finish(res)
 
     best_id, best_d = near.ranking[0]
     best_entry = library.get(best_id)
@@ -280,4 +289,4 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
                       f"证据不足以定论。建议加大 --samples。")
     if flags:
         res.detail += " 另检出疑似响应级缓存（服务完整性违规）。"
-    return res
+    return _finish(res)

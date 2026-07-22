@@ -43,7 +43,8 @@ class NearestResult:
 
 def nearest_model(test_counts: dict, enrolled: dict, claimed: str,
                   min_samples: int = 8, margin_threshold: float = 0.05,
-                  same_family: dict | None = None) -> NearestResult:
+                  same_family: dict | None = None,
+                  match_band: float = 0.18) -> NearestResult:
     """在闭集候选里找被测端点的最近邻模型。
 
     参数
@@ -54,6 +55,11 @@ def nearest_model(test_counts: dict, enrolled: dict, claimed: str,
                          略大于研究笔记里的同源噪声抖动，避免把噪声当证据）
       same_family : 可选 model -> family 标签；若最近邻与 claimed 同族则不 flag
                     （同族在指纹上本就近似，属于"自研旗舰"合法情形，不应误报）
+      match_band  : 一致带上限。最近邻距离在带内才允许断言"疑似被替换为该模型"；
+                    带外的最近邻只是闭集里的矮子将军，归属必须如实报未知——
+                    否则会出现"声称 GPT 却被指认换成更贵模型"这类经济学上荒谬的结论
+                    （真实情形多为库外便宜模型：廉价模型常以旗舰输出蒸馏，
+                    指纹像其"老师"，并不代表端点真在供应老师本尊）。
 
     返回 NearestResult。若样本不足以对 claimed 计距离，flagged=False。
     """
@@ -82,9 +88,16 @@ def nearest_model(test_counts: dict, enrolled: dict, claimed: str,
         and not same
     )
     if flagged:
-        reason = (f"闭集最近邻为 {nearest}（JSD={nearest_distance:.3f}），"
-                  f"比声称的 {claimed}（JSD={claimed_distance:.3f}）更近 {margin:.3f}，"
-                  f"疑似被替换为该模型或其近亲。")
+        if nearest_distance <= match_band:
+            reason = (f"闭集最近邻为 {nearest}（JSD={nearest_distance:.3f}，落在一致带内），"
+                      f"比声称的 {claimed}（JSD={claimed_distance:.3f}）更近 {margin:.3f}，"
+                      f"疑似被替换为该模型或其近亲。")
+        else:
+            reason = (f"到声称 {claimed} 的距离 {claimed_distance:.3f} 远超一致带"
+                      f"（≤{match_band:.2f}），可排除声称；但最近邻 {nearest}"
+                      f"（JSD={nearest_distance:.3f}）同样在带外，归属未知——"
+                      f"更可能是库外模型（廉价模型常以旗舰输出蒸馏，指纹偏向其'老师'，"
+                      f"不代表端点真在供应 {nearest}）。")
     elif same:
         reason = f"最近邻 {nearest} 与声称模型同族，属合法情形，不判违规。"
     else:
