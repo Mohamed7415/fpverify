@@ -173,6 +173,32 @@ official-API references usable for relay audits — **is open for contributions*
 enrollment costs cents; anti-poisoning rules (provenance + independent cross-check
 within the noise band) are in [`refs/README.md`](refs/README.md).
 
+### Don't trust our verdict? Reproduce it yourself
+
+Every reference entry exports a "reproduce pack" — the cells where that model is
+most deterministic (e.g. GPT-5.6 sol: coin flip = tails 11/11, random color =
+orange 11/11), verifiable by hand **without fpverify in the loop**:
+
+```bash
+python -m fpverify.cli reproduce --claimed gpt-5.6-sol
+```
+
+The pack ships four ways to run it. One rule applies to all of them: **every sample
+must come from a fresh conversation/instance** (asking ten times in one chat doesn't
+count — the model sees its own previous answers and varies them on purpose):
+
+- **Cursor / any agent IDE with subagents**: paste `cursor_prompt.md`, fan out N
+  fresh subagents (same channel as the `cursor-harness` references — the most
+  rigorous comparison);
+- **Codex CLI**: `codex_loop.sh` / `.ps1` loops `codex exec`, fresh session each run;
+- **Official API key**: `official_api.py` (stdlib only, zero deps) samples and
+  prints observed vs. reference side by side;
+- **By hand on the official site**: one fresh chat per question.
+
+The web console shows the same reproduce table under every verdict: per-question
+copy buttons, one-click copy of the full agent instructions, one-click download of
+the API script.
+
 ## Detection performance (controlled simulation)
 
 Validated against nine adversary types with known ground truth

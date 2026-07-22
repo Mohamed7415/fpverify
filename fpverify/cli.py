@@ -6,9 +6,12 @@
   python -m fpverify.cli identify --base-url URL --api-key KEY --model NAME
                                   [--claimed 库条目] [--channel api] [--samples 8] [--report out.json]
   python -m fpverify.cli library  [--library refs]
+  python -m fpverify.cli reproduce --claimed 库条目 [--out DIR] [--runs 10]
 
 enroll/audit 面向**有官方渠道**的审计者；identify 面向**只有中转站 key** 的用户——
 对照公共指纹库 refs/ 做降档识别：库内→验真伪（带 FPR 保证），库外→最像谁/未知。
+reproduce 生成"自行复核包"：不经过 fpverify 也能亲手验证参考铁律
+（Cursor/Codex 子代理扇出 / 官方 API 脚本 / 官网手点，见包内 README）。
 
 成本提示：enroll 默认 20 样本/cell × 36 cell = 720 次单 token 请求；
 audit 有早停，预算上限 --max-queries（默认 600），明显造假通常 <100 次就出结论；
@@ -84,6 +87,13 @@ def main(argv=None):
     pl = sub.add_parser("library", help="列出公共指纹库条目")
     pl.add_argument("--library", help="指纹库目录（缺省 = 仓库自带 refs/）")
 
+    pr = sub.add_parser("reproduce", help="生成自行复核包（不经过 fpverify 亲手验证铁律）")
+    pr.add_argument("--claimed", required=True, help="库条目 id/名称，如 gpt56-sol")
+    pr.add_argument("--library", help="指纹库目录（缺省 = 仓库自带 refs/）")
+    pr.add_argument("--out", help="输出目录（缺省 = reproduce_<条目id>/）")
+    pr.add_argument("--top", type=int, default=6, help="挑选铁律条数（默认 6）")
+    pr.add_argument("--runs", type=int, default=10, help="建议复核次数（默认 10）")
+
     args = ap.parse_args(argv)
 
     if args.cmd == "enroll":
@@ -116,7 +126,7 @@ def main(argv=None):
         ep.close()
         return {"PASS": 0, "SUSPECT": 3, "FAIL": 4}.get(res.verdict, 2)
 
-    if args.cmd in ("identify", "library"):
+    if args.cmd in ("identify", "library", "reproduce"):
         from .library import Library, default_library_path, identify
 
         lib = Library.load(args.library or default_library_path())
@@ -132,6 +142,35 @@ def main(argv=None):
                 print("\napi 频道暂无条目——有官方 key 的话，欢迎按 refs/README.md 贡献。")
             return 0
 
+        if args.cmd == "reproduce":
+            from .reproduce import write_pack
+
+            entry = lib.resolve(args.claimed)
+            if entry is None:
+                print(f"库里找不到『{args.claimed}』。可用条目:")
+                for e in lib.entries:
+                    print(f"  {e.id:<16} {e.model}")
+                return 2
+            out_dir = args.out or f"reproduce_{entry.id}"
+            try:
+                invs, out = write_pack(lib, entry, out_dir, k=args.top, runs=args.runs)
+            except ValueError as e:
+                print(str(e))
+                return 2
+            print(f"复核包已生成: {out}/  （参考: {entry.model}, 渠道 {entry.channel}）")
+            print()
+            print("铁律参考表（题目 → 参考众数, 占比）:")
+            for i, inv in enumerate(invs, 1):
+                print(f"  {i}. {inv.prompt}")
+                print(f"     → {inv.expected}  {inv.share:.0%} (n={inv.n})")
+            print()
+            print("复核方式（详见包内 README.md；每个样本必须来自全新对话/实例）:")
+            print(f"  A. Cursor/agent IDE: 粘贴 {out}/cursor_prompt.md")
+            print(f"  B. Codex CLI:        {out}/codex_loop.sh 或 .ps1")
+            print(f"  C. 官方 API key:     python {out}/official_api.py --base-url ... --model ... --key ...")
+            print(f"  D. 官网手点:         每题新开一个对话，重复 {args.runs} 次")
+            return 0
+
         ep = _endpoint(args)
         claimed = args.claimed or args.model
         print(f"降档识别: 端点声称『{claimed}』, 频道 {args.channel}, "
@@ -141,28 +180,59 @@ def main(argv=None):
                        progress=lambda n, m, w: print(
                            f"  进度 {n}/{m}" + (f"  财富={w:.3g}" if w is not None else "")))
         print()
-        print(f"判定: {res.verdict}")
-        print(f"  {res.detail}")
-        if res.warning:
-            print(f"  警告: {res.warning}")
-        if res.ranking:
-            print("  与库内模型的距离（聚合 JSD，越小越像）:")
-            for mid, d in res.ranking[:8]:
-                e = lib.get(mid)
-                name = e.model if e else mid
-                mark = " ← 声称" if res.claimed_entry == mid else ""
-                print(f"    {d:.3f}  {name}{mark}")
-            print(f"  解读带: ≤{res.bands['match']} 一致 / ≥{res.bands['unknown']} 未知")
+        _print_identify(res, lib)
         if args.report:
             import json as _json
             from pathlib import Path as _Path
             _Path(args.report).write_text(
                 _json.dumps(res.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
-            print(f"JSON 报告已保存: {args.report}")
+            print(f"完整数据: {args.report}")
         ep.close()
         return {"PASS": 0, "BEST_MATCH": 0, "SUSPECT": 3, "FAIL": 4, "UNKNOWN": 5}.get(res.verdict, 2)
 
     return 2
+
+
+# 摘要给人看，附录给较真的人。
+_VERDICT_ZH = {
+    "PASS": "相符", "FAIL": "不符", "BEST_MATCH": "库外·行为一致",
+    "UNKNOWN": "未知", "INCONCLUSIVE": "证据不足", "SUSPECT": "存疑",
+}
+
+
+def _print_identify(res, lib):
+    line = "─" * 46
+    name = lambda mid: (lib.get(mid).model if lib.get(mid) else mid)
+
+    print(line)
+    print(f"结果：{_VERDICT_ZH.get(res.verdict, res.verdict)}（{res.verdict}）")
+    print(f"声称：{name(res.claimed_entry) if res.claimed_entry else res.claimed}"
+          f"　渠道：{res.channel}")
+    print("依据：")
+    print(f"  · {res.detail}")
+    if res.nearest and res.nearest != res.claimed_entry:
+        print(f"  · 最近邻：{name(res.nearest)}（JSD {res.nearest_distance:.3f}）")
+    if res.warning:
+        print(f"  · {res.warning}")
+    repro_id = res.claimed_entry or res.nearest
+    if repro_id:
+        print(f"自行复核：python -m fpverify.cli reproduce --claimed {repro_id}")
+    print(line)
+
+    print("附录")
+    stats = f"  查询 {res.n_queries} 次 · 错误 {res.errors}"
+    if res.betting:
+        stats += (f" · α={res.betting['alpha']} · 财富 {res.betting['wealth']:.3g}"
+                  f"（阈值 {res.betting['threshold']:.0f}）")
+    print(stats)
+    if res.ranking:
+        print("  距离排行（聚合 JSD，越小越像）:")
+        for mid, d in res.ranking[:8]:
+            mark = " ← 声称" if res.claimed_entry == mid else ""
+            print(f"    {d:.3f}  {name(mid)}{mark}")
+        print(f"  解读带：≤{res.bands['match']} 一致 / ≥{res.bands['unknown']} 未知")
+    if res.cache_flags:
+        print(f"  疑似响应缓存 cell：{', '.join(res.cache_flags)}")
 
 
 if __name__ == "__main__":

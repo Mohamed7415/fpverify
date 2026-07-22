@@ -61,6 +61,15 @@
   .claimed-tag { color: var(--accent); font-size: 12px; }
   .bands { color: var(--dim); font-size: 12px; margin-top: 8px; }
   a { color: var(--accent); text-decoration: none; }
+  h2 { font-size: 16px; margin: 0 0 6px; }
+  .repro-note { color: var(--dim); font-size: 13px; margin: 0 0 4px; }
+  .btnrow { display: flex; gap: 12px; }
+  .btnrow button {
+    background: transparent; border: 1px solid var(--line); color: var(--accent);
+    font-weight: 500; margin-top: 12px;
+  }
+  .copyq { font-size: 12.5px; white-space: nowrap; }
+  #reprotable td:nth-child(2) { color: var(--green); }
 </style>
 </head>
 <body>
@@ -120,6 +129,23 @@
     </table>
     <div class="bands" id="v-bands"></div>
   </div>
+
+  <div class="card" id="repro" style="display:none">
+    <h2>自行复核（不用信我们）</h2>
+    <p class="repro-note" id="repro-note"></p>
+    <table id="reprotable">
+      <thead><tr><th>题目（原文发送）</th><th>参考答案</th><th>占比</th><th></th></tr></thead>
+      <tbody id="reprobody"></tbody>
+    </table>
+    <p class="repro-note" style="margin-top:10px">
+      规则：<b>每个样本必须来自全新对话/全新实例</b>——同一个对话里连问十次不算数，
+      模型看得见自己之前的答案会刻意换。官网手点：每题新开一个对话；
+      或把下面的整套指令粘给 Cursor / Codex，让它扇出全新子代理来跑。</p>
+    <div class="btnrow">
+      <button id="copy-agent">复制 Cursor/Codex 复核指令</button>
+      <button id="dl-script">下载官方 API 复核脚本 (.py)</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -162,6 +188,7 @@ function showError(msg) {
   $('v-badge').className = 'v-badge v-FAIL'; $('v-badge').textContent = '出错';
   $('v-detail').textContent = msg; $('v-warn').textContent = '';
   $('ranktable').style.display = 'none'; $('v-bands').textContent = '';
+  $('repro').style.display = 'none';
 }
 
 const VLABEL = {
@@ -188,7 +215,66 @@ function showResult(res) {
   } else {
     $('ranktable').style.display = 'none'; $('v-bands').textContent = '';
   }
+  loadRepro(res.claimed_entry || res.nearest);
 }
+
+// ---- 自行复核 ----
+const esc = s => String(s).replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let reproData = null;
+
+async function loadRepro(entryId) {
+  $('repro').style.display = 'none';
+  reproData = null;
+  if (!entryId) return;
+  try {
+    const r = await fetch('/api/reproduce?entry=' + encodeURIComponent(entryId));
+    const d = await r.json();
+    if (d.error || !d.invariants || !d.invariants.length) return;
+    reproData = d;
+    $('repro-note').textContent =
+      `参考：${d.model}（渠道 ${d.channel}，入册 ${d.enrolled_at}，n=${d.samples_per_cell}/cell）。` +
+      `下面是该模型众数占比最高的题——把题目原样发给一个全新对话，看答案对不对得上。`;
+    $('reprobody').innerHTML = d.invariants.map((v, i) =>
+      `<tr><td>${esc(v.prompt)}</td><td>${esc(v.expected)}</td>` +
+      `<td>${Math.round(v.share * 100)}%（n=${v.n}）</td>` +
+      `<td><a href="#" class="copyq" data-i="${i}">复制题目</a></td></tr>`).join('');
+    $('repro').style.display = 'block';
+  } catch (e) { /* 复核包生成失败不影响主结果 */ }
+}
+
+async function copyText(text, el, doneLabel) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
+  const old = el.textContent;
+  el.textContent = doneLabel || '已复制 ✓';
+  setTimeout(() => el.textContent = old, 1600);
+}
+
+$('reprobody').addEventListener('click', ev => {
+  const a = ev.target.closest('.copyq');
+  if (!a || !reproData) return;
+  ev.preventDefault();
+  const v = reproData.invariants[+a.dataset.i];
+  copyText(v.system + '\n' + v.prompt, a);
+});
+$('copy-agent').addEventListener('click', ev => {
+  if (!reproData) return;
+  copyText(reproData.files['cursor_prompt.md'], ev.target, '已复制，去粘贴给 Cursor/Codex ✓');
+});
+$('dl-script').addEventListener('click', () => {
+  if (!reproData) return;
+  const blob = new Blob([reproData.files['official_api.py']], { type: 'text/x-python' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `official_api_${reproData.entry}.py`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 
 $('fetchmodels').addEventListener('click', async (ev) => {
   ev.preventDefault();
@@ -213,6 +299,7 @@ $('run').addEventListener('click', async () => {
   };
   if (!body.base_url || !body.api_key || !body.model) { alert('请填写 Base URL、API Key 和模型名'); return; }
   $('verdict').style.display = 'none';
+  $('repro').style.display = 'none';
   const r = await fetch('/api/run', { method: 'POST', body: JSON.stringify(body) });
   const d = await r.json();
   if (d.error) { alert(d.error); return; }

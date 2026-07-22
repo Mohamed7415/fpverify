@@ -106,6 +106,31 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/status":
             with _state_lock:
                 self._json({k: _state[k] for k in ("running", "log", "result", "error")})
+        elif self.path.startswith("/api/reproduce"):
+            # 生成"自行复核包"：铁律参考表 + agent 提示词 + 官方 API 脚本（见 fpverify/reproduce.py）
+            from urllib.parse import parse_qs, urlparse
+
+            eid = (parse_qs(urlparse(self.path).query).get("entry") or [""])[0]
+            try:
+                lib = Library.load(_lib_path)
+                entry = lib.get(eid) or lib.resolve(eid)
+                if entry is None:
+                    self._json({"error": f"库里找不到条目: {eid}"}, 404)
+                    return
+                from fpverify.reproduce import build_pack_texts
+
+                invs, files = build_pack_texts(entry, lib.fingerprint(entry))
+                self._json({
+                    "entry": entry.id, "model": entry.model, "channel": entry.channel,
+                    "enrolled_at": entry.enrolled_at,
+                    "samples_per_cell": entry.samples_per_cell,
+                    "invariants": [inv.to_dict() for inv in invs],
+                    "files": files,
+                })
+            except ValueError as e:
+                self._json({"error": str(e)}, 400)
+            except Exception as e:
+                self._json({"error": f"{type(e).__name__}: {e}"}, 500)
         else:
             self._json({"error": "not found"}, 404)
 

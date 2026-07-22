@@ -149,6 +149,28 @@ py -3.13 -X utf8 -m webui.server             # 自动打开 http://127.0.0.1:876
 `api` 频道——真正能审中转站的裸官方 API 参考——**公开征集贡献**：入册一次几毛钱，
 防投毒规则（来源出处 + 独立二次入册在噪声带内交叉验证）见 [`refs/README.md`](refs/README.md)。
 
+### 不信我们的结论？自己复核（reproduce）
+
+每个参考条目都能一键导出"复核包"——挑出该模型众数占比最高的几道题
+（如 GPT-5.6 sol：抛硬币 = tails 11/11、随机颜色 = orange 11/11），
+**不经过 fpverify** 亲手验证：
+
+```bash
+py -3.13 -X utf8 -m fpverify.cli reproduce --claimed gpt-5.6-sol
+```
+
+包里带四种跑法，共同规则是**每个样本必须来自全新对话/全新实例**
+（同一对话里连问十次不算数——模型看得见自己之前的答案会刻意换）：
+
+- **Cursor 等 agent IDE**：粘贴 `cursor_prompt.md`，扇出 N 个全新 subagent
+  （与 `cursor-harness` 参考同渠道，最严谨）；
+- **Codex CLI**：`codex_loop.sh` / `.ps1` 循环 `codex exec`，每次全新会话；
+- **官方 API key**：`official_api.py`（纯标准库、零依赖），采样后与参考表并排打印；
+- **官网手点**：每题新开一个对话问一次。
+
+网页检测台出结果后也会直接给出这张复核表：每道题一键复制、整套 agent 指令
+一键复制、官方 API 脚本一键下载。
+
 ## 检出性能（受控仿真）
 
 对九类已知真相的对手做了全面验证（α=0.01、容差自动标定、预算 600 查询；
