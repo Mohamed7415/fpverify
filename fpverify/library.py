@@ -131,10 +131,12 @@ class IdentifyResult:
     betting: dict | None = None       # {wealth, threshold, alpha, delta}（仅库内验证时有）
     cache_flags: list = field(default_factory=list)
     bands: dict = field(default_factory=lambda: {"match": BAND_MATCH, "unknown": BAND_UNKNOWN})
+    observed_counts: dict = field(default_factory=dict)  # cell -> {答案: 次数}，供脱离本工具独立重算
 
     def to_dict(self) -> dict:
         d = dict(self.__dict__)
         d["ranking"] = [[m, round(x, 4)] for m, x in self.ranking]
+        d["observed_counts"] = {f"{k[0]}::{k[1]}": dict(v) for k, v in self.observed_counts.items()}
         return d
 
 
@@ -228,7 +230,7 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
         channel=channel, verdict="", detail="", n_queries=n, errors=errors,
         ranking=near.ranking, nearest=near.nearest,
         nearest_distance=near.nearest_distance, claimed_distance=near.claimed_distance,
-        cache_flags=flags)
+        cache_flags=flags, observed_counts=test_fp.counts())
 
     # ---- 判定阶梯 ----
     if claimed_entry is not None and test is not None:

@@ -217,6 +217,8 @@ def _print_identify(res, lib):
     repro_id = res.claimed_entry or res.nearest
     if repro_id:
         print(f"自行复核：python -m fpverify.cli reproduce --claimed {repro_id}")
+        if res.verdict in ("PASS", "BEST_MATCH"):
+            print("　　　　　（同一套题官网、被测端点各问一遍并排对答案——通过与否都不需要信我们）")
     print(line)
 
     print("附录")

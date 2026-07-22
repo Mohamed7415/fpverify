@@ -35,6 +35,10 @@ def render_text(result, reference_model: str) -> str:
     w("=" * 68)
     w(f"判定: {result.verdict}")
     w(f"  {result.detail}")
+    if result.verdict == "PASS":
+        w("  PASS 的含义是本次预算内未检出偏离，不是对商家的认证背书。")
+        w("  怀疑本工具偏袒？用官方 key 对两个不同模型交叉审计，错配那次必须 FAIL；")
+        w("  --report 导出的 JSON 含全部原始答案计数，可用任意代码独立重算本判定。")
     w("")
     w(f"查询消耗: {result.n_queries} 次（单 token 回答；早停机制生效时远小于预算）")
     w(f"e-process 财富: {result.wealth:.3g}（峰值 {result.peak_wealth:.3g}，拒绝阈值 {result.threshold:.0f}）")

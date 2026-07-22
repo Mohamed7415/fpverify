@@ -34,6 +34,19 @@ def test_honest_passes(reference):
     assert res.verdict == "PASS", res.detail
 
 
+def test_report_carries_recomputable_evidence(reference):
+    """报告须含被测端点原始答案计数，且整体可 JSON 序列化——供脱离本工具独立重算判定。"""
+    import json
+    res = _audit(reference, "honest", seed=29)
+    assert res.observed_counts, "observed_counts 不应为空"
+    assert sum(sum(c.values()) for c in res.observed_counts.values()) == res.n_queries - res.errors
+    d = res.to_dict()
+    payload = json.dumps(d, ensure_ascii=False)      # 不可序列化会直接抛错
+    back = json.loads(payload)
+    assert all("::" in k for k in back["observed_counts"])
+    assert all(isinstance(v, dict) for v in back["observed_counts"].values())
+
+
 def test_drift_passes(reference):
     """同模型跨部署漂移不应被误杀（δ 容差的意义）。"""
     res = _audit(reference, "drift", seed=22)

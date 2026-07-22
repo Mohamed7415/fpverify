@@ -35,11 +35,13 @@ class AuditResult:
     model_fields_seen: dict = field(default_factory=dict)
     errors: int = 0
     detail: str = ""
+    observed_counts: dict = field(default_factory=dict)  # cell -> {答案: 次数}，供脱离本工具独立重算
 
     def to_dict(self):
         d = dict(self.__dict__)
         d["per_cell_jsd"] = {f"{k[0]}::{k[1]}": v for k, v in self.per_cell_jsd.items()}
         d["cache_flags"] = [f"{c.cell[0]}::{c.cell[1]}" for c in self.cache_flags]
+        d["observed_counts"] = {f"{k[0]}::{k[1]}": dict(v) for k, v in self.observed_counts.items()}
         return d
 
 
@@ -159,4 +161,5 @@ class Verifier:
             verdict=verdict, n_queries=n, wealth=test.wealth, peak_wealth=test.peak_wealth,
             threshold=1.0 / cfg.alpha, alpha=cfg.alpha, delta=cfg.delta,
             aggregate_jsd=agg, per_cell_jsd=per_cell, cache_flags=cache_flags,
-            model_fields_seen=model_fields, errors=errors, detail=detail)
+            model_fields_seen=model_fields, errors=errors, detail=detail,
+            observed_counts=test_fp.counts())

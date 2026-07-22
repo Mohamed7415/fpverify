@@ -234,7 +234,9 @@ async function loadRepro(entryId) {
     reproData = d;
     $('repro-note').textContent =
       `参考：${d.model}（渠道 ${d.channel}，入册 ${d.enrolled_at}，n=${d.samples_per_cell}/cell）。` +
-      `下面是该模型众数占比最高的题——把题目原样发给一个全新对话，看答案对不对得上。`;
+      `下面是该模型众数占比最高的题。两边都问：官网新对话问一遍（验参考表），` +
+      `你的中转站也问一遍（验上面的判定）——两边答案都对上，这个结果就不需要经过我们；` +
+      `对不上，带着记录来仓库提 issue。`;
     $('reprobody').innerHTML = d.invariants.map((v, i) =>
       `<tr><td>${esc(v.prompt)}</td><td>${esc(v.expected)}</td>` +
       `<td>${Math.round(v.share * 100)}%（n=${v.n}）</td>` +

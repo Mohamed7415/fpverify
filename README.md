@@ -110,6 +110,25 @@ color = orange 11/11). Four ways to run it:
 One rule: every sample must come from a fresh conversation or instance. Asking ten
 times in one chat is invalid — the model sees its previous answers and varies them.
 
+Reproduction cuts both ways: it checks a FAIL, and it checks a PASS. Send the same
+questions to the official site (validates the reference table) and to your relay
+(validates the verdict). If both line up, the conclusion no longer depends on us —
+`official_api.py --base-url` points at either endpoint.
+
+**If it's us you don't trust** — say, "the tool is paid by relays to always print
+PASS":
+
+- Verdicts are computed on your machine by open-source code, with no telemetry. We
+  never see your URL, key, or result, so there is no channel for per-run tampering;
+  any rigging would have to live in public code.
+- Feed it a case you know is fake: the cross-audit self-check at the end of Case 3
+  (or the cheating endpoint in the local demo below). The mismatched run must FAIL.
+  A tool rigged to always pass is exposed on the spot; CI pins the same assertion.
+- The `--report` JSON includes every raw answer count from the endpoint under test
+  (`observed_counts`); together with the reference file you enrolled yourself,
+  anyone can recompute the verdict with independent code.
+- No paid "certification" or vendor whitelisting, ever. No vendor ads.
+
 ### Case 3: you have an official API key
 
 The reference fingerprint is enrolled directly from the official channel. No shared
