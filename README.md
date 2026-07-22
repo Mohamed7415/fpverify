@@ -11,6 +11,10 @@ Checks whether an OpenAI-compatible endpoint actually serves the model it claims
 The problem: API resellers and relays can swap the flagship model you paid for with a
 cheaper or quantized one. The API format stays the same and the `model` field in the
 response still says the flagship name, so nothing at the protocol level gives it away.
+This is not hypothetical: a March 2026 CISPA audit of "shadow APIs" found **45.83% of
+tested endpoints failed model-identity fingerprint verification**, with benchmark gaps
+up to 47 points — and those endpoints had been used as official models in 187 academic
+papers ([Real Money, Fake Models](https://arxiv.org/abs/2603.01919)).
 
 The method: LLMs cannot produce random output. Ask a model to "name a random number
 between 1 and 100" and its answers concentrate heavily — on different values for
