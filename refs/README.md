@@ -11,13 +11,19 @@ This directory backs `fpverify identify`: users who *only* have a relay key (and
 definition cannot reach the official API) audit against community-enrolled references
 instead of enrolling their own.
 
-## 渠道 / Channels
+## 渠道与协议 / Channels & protocols
 
-| channel | 含义 | 能干什么 |
-|---|---|---|
-| `api` | 裸 OpenAI 兼容 API 直连入册 | **审计中转站**(与用户的使用渠道同分布) |
-| `cursor-harness` | Cursor agent harness 内采样(带系统提示、温度不受控) | 同渠道比对、identify 演示;**不能**直接当裸 API 参考 |
-| `simulation` | 仿真分布 | 格式示例 / 测试 |
+指纹是**(模型 × 渠道 × 协议 × 档位)**的条件分布,每个条目都带 `protocol` 字段。
+探针(enroll/audit/identify)恒为 `cold-single`(每题独立请求、全新对话);
+参考与探针**同协议才发 PASS/FAIL 硬判定**,跨协议只做相对排名。
+
+| channel | protocol | 含义 | 能干什么 |
+|---|---|---|---|
+| `api` | `cold-single` | 裸 OpenAI 兼容 API 直连入册 | **审计中转站**(与探针同协议同渠道,可硬判定) |
+| `cursor-harness` | `harness-battery` | Cursor agent harness 内套卷采样(一实例连答十题;带系统提示、温度不受控) | 相对排名、identify 演示、套卷复核;**不能**当冷协议参考 |
+| `simulation` | `cold-single` | 仿真分布 | 格式示例 / 测试 |
+
+协议全文与跨协议实证见 `experiments/frontier/PROTOCOL.md`。
 
 **当前状态**:`cursor-harness` 频道有 2026-07 实测的 9 个前沿模型(n=11/cell,由
 `experiments/build_refs_from_frontier.py` 从原始数据一键重建);`api` 频道**正在
@@ -35,6 +41,7 @@ python -m fpverify.cli enroll \
 
 然后在 `manifest.json` 的 `entries` 里加一条(照抄现有条目格式),PR 必须包含:
 
+- `channel: "api"`、`protocol: "cold-single"`(enroll 天然就是这个协议);
 - `enrolled_at`(日期)、`source`(官方 base-url,**不含 key**)、精确模型版本号;
 - 入册命令原样贴在 PR 描述里;
 - 官方端点对着这份参考自审计的 PASS 报告(`audit --report`)。

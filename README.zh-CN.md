@@ -58,9 +58,13 @@ py -3.13 -X utf8 -m webui.server
 |---|---|
 | PASS | 预算内未发现偷换证据 |
 | FAIL | 行为显著偏离声称模型的参考（误判概率 ≤ 0.01），或检出响应级缓存 |
-| BEST_MATCH | 声称的模型不在库里；报告行为与库内哪个模型一致 |
+| BEST_MATCH | 报告行为与库内哪个模型一致（声称不在库里，或参考与探针跨协议） |
 | UNKNOWN | 与库内任何模型都不像 |
 | INCONCLUSIVE | 证据不足；加大采样数重测 |
+
+PASS / FAIL 硬判定只在参考与探针**同协议**时给出（`api` 频道的冷协议参考）。
+自带的 `cursor-harness` 参考按套卷协议采集，与在线单题探针跨协议——同一个模型
+换一种问法答案本就不同，所以只做相对排名（BEST_MATCH / UNKNOWN），结果页会注明。
 
 判定下方附「自行复核」表：该模型参考中最确定的几道题、参考答案、一键复制的提示词
 与可下载脚本。复核不依赖本工具，方法见场景二。
@@ -75,10 +79,11 @@ py -3.13 -X utf8 -m fpverify.cli library        # 列出指纹库
 py -3.13 -X utf8 -m fpverify.cli identify --base-url https://中转站/v1 --api-key KEY --model gpt-5.6 --samples 8
 ```
 
-识别逻辑分三档：声称的模型在库里，用序贯检验验真伪（PASS / FAIL）；不在库里，
-报告行为最像库内哪个模型（BEST_MATCH）；都不像，报 UNKNOWN。指纹库自带 2026-07
-采集的 9 个前沿模型（`cursor-harness` 渠道，仅限同渠道比对）。`api` 渠道的官方 API
-参考指纹征集社区贡献，入册一次成本几毛钱，防投毒规则见 [`refs/README.md`](refs/README.md)。
+识别逻辑分三档：声称的模型在库里且参考与探针同协议，用序贯检验验真伪
+（PASS / FAIL）；否则报告行为最像库内哪个模型（BEST_MATCH）；都不像，报 UNKNOWN。
+指纹库自带 2026-07 采集的 9 个前沿模型（`cursor-harness` 渠道、套卷协议，只做
+相对排名）。`api` 渠道的冷协议参考征集社区贡献，入册一次成本几毛钱，防投毒规则见
+[`refs/README.md`](refs/README.md)。
 
 ### 场景二：复核判定（不依赖本工具）
 
@@ -86,21 +91,30 @@ py -3.13 -X utf8 -m fpverify.cli identify --base-url https://中转站/v1 --api-
 py -3.13 -X utf8 -m fpverify.cli reproduce --claimed gpt-5.6-sol
 ```
 
-导出该模型的复核包：参考指纹中众数占比最高的几道题及参考答案（GPT-5.6 sol：
-抛硬币 = tails 11/11，随机颜色 = orange 11/11）。四种跑法：
+导出该模型的复核包：参考指纹中众数占比最高的几道题、参考答案，以及**这份参考的
+采集条件**（渠道 / 协议 / 档位，见 `experiments/frontier/PROTOCOL.md`）。
 
-1. 把 `cursor_prompt.md` 粘贴给 Cursor 等支持子代理的 agent IDE，扇出 N 个全新
-   subagent（与 `cursor-harness` 参考同渠道）；
-2. `codex_loop.sh` / `codex_loop.ps1` 循环调用 `codex exec`，每次都是全新会话；
-3. `official_api.py`（纯标准库、零依赖）用官方 API key 采样，与参考表并排打印；
-4. 在官网手动测：每题新开一个对话。
+**复核必须与参考同渠道同协议**——指纹是（模型 × 渠道 × 协议 × 档位）的条件分布，
+同一个模型在官网冷启动单问一句和在 agent 套卷里连答十题，答案可以完全不同
+（实测 gpt-5.6-sol：套卷抛硬币 = tails 11/11，冷启动单问 = heads 5/6）。
+所以跑法按参考的出身选：
+
+1. `cursor-harness` 频道的社区参考：把 `cursor_prompt.md` 粘贴给 Cursor 等
+   agent IDE，扇出 N 个全新 subagent 按原套卷跑（同渠道同协议）；
+2. 你自己用官方 key 入册的 `api` 频道参考：`official_api.py`（纯标准库、零依赖）
+   按同一冷协议打官方 API，与参考表并排打印；
+3. `codex_loop.sh` / `codex_loop.ps1` 循环调用 `codex exec`，每次全新会话
+   （codex-harness 渠道，用于同渠道参考）。
+
+在官网手点属于又一个渠道（web），与上述参考都不同条件；答案对不上不构成推翻，
+对上了也只是巧合级证据。
 
 规则一条：每个样本必须来自全新对话或全新实例。同一对话内连问十次无效——模型能
 看到自己之前的答案，会刻意变换。
 
-复核不止验 FAIL，也验 PASS：同一套题官网问一遍（对参考表），你的中转站再问一遍
-（对判定）。两边都对上，结论就不经过我们；`official_api.py --base-url` 指向哪个
-端点都行。
+复核不止验 FAIL，也验 PASS：用你官方 key 入册的参考，同一套题按同协议分别打
+官方 API（对参考表）和你的中转站（对判定），并排对答案——两边都对上，结论就
+不经过我们（`official_api.py --base-url` 指向哪个端点都行）。
 
 **如果你怀疑的是我们**——比如"工具收了商家的钱，专报 PASS"：
 
@@ -170,12 +184,13 @@ filter_en / true_random / cache / partial_mimic`，实现见 `sim/adversaries.py
 ## 实测：前沿模型无法随机
 
 2026 年 7 月，对 9 个前沿模型采样，每个模型 11 个全新独立实例（Cursor subagent
-渠道，模型身份由平台保证）。问"随机说一个 1 到 100 的数"，99 个实例的答案只有
-4 种：73、47、37、42，其中 73 占 65.7%。全部模型全部题目的熵中位数为 0.44 bit；
-均匀随机应为 6.64 bit。
+渠道，套卷协议：一实例一次答完十题）。问"随机说一个 1 到 100 的数"，99 个实例的
+答案只有 4 种：73、47、37、42，其中 73 占 65.7%。全部模型全部题目的熵中位数为
+0.44 bit；均匀随机应为 6.64 bit。
 
-验证方式：开一个全新会话，向 Claude Fable 5 要一个 1 到 100 的随机数。本次实测中
-11 个新实例有 9 个回答 73，thinking 版 11 个全部回答 73。
+最直观的验证：开一个全新会话，向 Claude Fable 5 要一个 1 到 100 的随机数。本次
+实测 11 个新实例有 9 个回答 73；thinking 版冷启动单问复测，6 次中 5 次仍答 73。
+但**不是每道题都这样跨问法稳定**，见表后的协议说明。
 
 单题答案会撞车（5 个模型的众数都是 73），组合分布才构成指纹：
 
@@ -190,6 +205,12 @@ filter_en / true_random / cache / partial_mimic`，实现见 `sim/adversaries.py
 | GLM-5.2 | **73**（91%） | teal | fox | Kyoto | heads（91%） |
 | Composer 2.5 | **47**（100%） | purple | elephant | Tokyo | heads（91%） |
 | Grok 4.5 | **73**（100%） | teal | otter | Lisbon | heads（45%） |
+
+表中数字是**套卷协议**条件下的分布。指纹是（模型 × 渠道 × 协议 × 档位）的条件
+分布，换协议会移位：同是 GPT-5.6 sol，套卷抛硬币 = tails 11/11，官网冷启动单问 =
+heads 6/6；Fable 5 thinking 套卷 = heads 11/11，冷问 = tails 5/6。这不是矛盾，
+是条件分布的本性——所以本工具所有比对都要求同协议，跨协议只给相对排名
+（采集协议全文与实测记录：[`experiments/frontier/PROTOCOL.md`](experiments/frontier/PROTOCOL.md)）。
 
 ![9 个前沿模型的两两聚合 JSD 距离矩阵](experiments/out/fig_frontier_matrix.png)
 
@@ -311,8 +332,11 @@ docs/         研究笔记（问题、威胁模型、方法、实验、前沿实
 
 - 判定是统计证据，不是密码学证明。FAIL 表示分布显著偏离参考，可能原因包括换模、
   量化、版本回滚、缓存。建议保留 JSON 报告并复测后再下结论。
-- 前沿模型指纹采自 Cursor agent harness 内部（含系统提示、温度不受控），可证明
-  非随机性与可分性，不能与裸 API 数字直接对表；每模型 n=11，自比噪声带偏宽。
+- 指纹对采集条件高度敏感（渠道 / 协议 / 档位 / 用户系统提示都是条件）。本工具把
+  协议当一等属性强制对齐，跨协议一律降为相对排名；但代价是：参考只在自己的条件
+  下有效，换条件需重新入册。
+- 前沿模型指纹采自 Cursor agent harness 内部、套卷协议（含系统提示、温度不受控），
+  可证明非随机性与可分性，不能与裸 API 数字直接对表；每模型 n=11，自比噪声带偏宽。
 - 同权重的推理模式切换（thinking 开/关）指纹不可见，需要延迟/长度旁路信号。
 - 能在账号级识别审计流量的对手可击败一次性认证；对策是持续、低频、混入业务流量
   的审计。

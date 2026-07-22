@@ -64,9 +64,15 @@ Verdicts:
 |---|---|
 | PASS | no evidence of substitution within budget |
 | FAIL | behavior deviates significantly from the claimed model's reference (false-positive probability ≤ 0.01), or response-level caching detected |
-| BEST_MATCH | claimed model not in the library; reports which library model the behavior matches |
+| BEST_MATCH | reports which library model the behavior matches (claim not in the library, or reference and probe use different protocols) |
 | UNKNOWN | matches nothing in the library |
 | INCONCLUSIVE | not enough evidence; re-run with more samples |
+
+Hard PASS / FAIL verdicts are only issued when the reference was collected under the
+**same protocol** as the probes (`api`-channel references, cold single-question).
+The bundled `cursor-harness` references were collected under a battery protocol —
+the same model answers differently when asked differently — so against them the tool
+only reports relative ranking (BEST_MATCH / UNKNOWN) and says so in the result.
 
 Below the verdict the console shows a self-verification table: the claimed model's
 most deterministic questions, their reference answers, copy-paste prompts and a
@@ -83,12 +89,13 @@ python -m fpverify.cli library        # list the fingerprint library
 python -m fpverify.cli identify --base-url https://relay.example/v1 --api-key KEY --model gpt-5.6 --samples 8
 ```
 
-Identification degrades in three steps: claimed model in the library → sequential
-test verdict (PASS / FAIL); not in the library → report the closest behavioral match
-(BEST_MATCH); nothing close → UNKNOWN. The library ships 9 frontier models measured
-in July 2026 (`cursor-harness` channel, same-channel comparisons only). References
-for the `api` channel are open for community contribution — one enrollment costs
-cents; anti-poisoning rules are in [`refs/README.md`](refs/README.md).
+Identification degrades in three steps: claimed model in the library with a
+protocol-matched reference → sequential test verdict (PASS / FAIL); otherwise →
+report the closest behavioral match (BEST_MATCH); nothing close → UNKNOWN. The
+library ships 9 frontier models measured in July 2026 (`cursor-harness` channel,
+battery protocol, ranking only). Cold-protocol references for the `api` channel are
+open for community contribution — one enrollment costs cents; anti-poisoning rules
+are in [`refs/README.md`](refs/README.md).
 
 ### Case 2: verify a verdict without trusting this tool
 
@@ -97,23 +104,38 @@ python -m fpverify.cli reproduce --claimed gpt-5.6-sol
 ```
 
 Exports a reproduce pack for that model: the questions where its reference is most
-deterministic, with expected answers (GPT-5.6 sol: coin flip = tails 11/11, random
-color = orange 11/11). Four ways to run it:
+deterministic, the expected answers, and **the conditions the reference was collected
+under** (channel / protocol / tier; see `experiments/frontier/PROTOCOL.md`).
 
-1. Paste `cursor_prompt.md` into Cursor or any agent IDE with subagents; it fans out
-   N fresh subagents (same channel as the `cursor-harness` references);
-2. `codex_loop.sh` / `codex_loop.ps1` loops `codex exec`, a fresh session per run;
-3. `official_api.py` (stdlib only, zero dependencies) samples an official API key
-   and prints observed vs. reference side by side;
-4. By hand on the official site: one fresh chat per question.
+**Reproduction must match the reference's channel and protocol.** A fingerprint is a
+conditional distribution over (model × channel × protocol × tier), and the same model
+answers differently when asked differently. Measured on GPT-5.6 sol: coin flip inside
+the ten-question battery = tails 11/11; the same question cold, one fresh chat, one
+question = heads 6/6. Neither is wrong — they are different conditions. So the pack
+picks the method by the reference's origin:
 
-One rule: every sample must come from a fresh conversation or instance. Asking ten
-times in one chat is invalid — the model sees its previous answers and varies them.
+1. `cursor-harness` references (battery protocol): paste `cursor_prompt.md` into
+   Cursor or any agent IDE with subagents — it fans out N fresh subagents, each
+   answering the original battery verbatim (same channel, same protocol);
+2. `api` references you enrolled with an official key (cold protocol):
+   `official_api.py` (stdlib only, zero dependencies) asks each question in an
+   independent fresh request, exactly like `enroll`/`audit`, and prints observed
+   vs. reference side by side;
+3. `codex_loop.sh` / `codex_loop.ps1` loops `codex exec`, a fresh session per run
+   (a nearby harness channel).
 
-Reproduction cuts both ways: it checks a FAIL, and it checks a PASS. Send the same
-questions to the official site (validates the reference table) and to your relay
-(validates the verdict). If both line up, the conclusion no longer depends on us —
-`official_api.py --base-url` points at either endpoint.
+Asking by hand on the official website is yet another channel (web); a mismatch there
+refutes nothing, and a match is only directional.
+
+One rule regardless of method: every sample must come from a fresh conversation or
+instance. Asking ten times in one chat is invalid — the model sees its previous
+answers and varies them.
+
+Reproduction cuts both ways: it checks a FAIL, and it checks a PASS. With a reference
+you enrolled yourself, run the same pack under the same protocol against the official
+API (validates the reference table) and against your relay (validates the verdict).
+If both line up, the conclusion no longer depends on us — `official_api.py
+--base-url` points at either endpoint.
 
 **If it's us you don't trust** — say, "the tool is paid by relays to always print
 PASS":
@@ -199,14 +221,16 @@ swap / pin / filter_en / true_random / cache / partial_mimic`; see `sim/adversar
 ## Measurements: frontier models cannot be random
 
 July 2026: 9 frontier models, 11 fresh independent instances each (sampled through
-Cursor subagents, so model identity is platform-guaranteed). Asked "name a random
-number between 1 and 100", the 99 instances produced 4 distinct answers: 73, 47, 37,
-42 — with 73 at 65.7%. Median per-question entropy across all models: 0.44 bits;
-uniform random would be 6.64 bits.
+Cursor subagents under a battery protocol — one instance answers all ten questions
+in one reply; model identity is platform-guaranteed). Asked "name a random number
+between 1 and 100", the 99 instances produced 4 distinct answers: 73, 47, 37, 42 —
+with 73 at 65.7%. Median per-question entropy across all models: 0.44 bits; uniform
+random would be 6.64 bits.
 
-To check this yourself: open a fresh chat and ask Claude Fable 5 for a random number
-between 1 and 100. In our runs, 9 of 11 fresh instances answered 73; the thinking
-variant answered 73 in 11 of 11.
+The most tangible check: open a fresh chat and ask Claude Fable 5 for a random number
+between 1 and 100. In our runs, 9 of 11 fresh instances answered 73; asked cold as a
+single question, the thinking variant still answered 73 in 5 of 6. But **not every
+question is stable across protocols** — see the note under the table.
 
 Single answers collide (five models share 73 as their mode); the combination of
 distributions is what forms the fingerprint:
@@ -222,6 +246,15 @@ distributions is what forms the fingerprint:
 | GLM-5.2 | **73** (91%) | teal | fox | Kyoto | heads (91%) |
 | Composer 2.5 | **47** (100%) | purple | elephant | Tokyo | heads (91%) |
 | Grok 4.5 | **73** (100%) | teal | otter | Lisbon | heads (45%) |
+
+The numbers above are distributions **under the battery protocol**. A fingerprint is
+conditional on (model × channel × protocol × tier), and changing the protocol shifts
+it: GPT-5.6 sol flips its coin tails 11/11 in the battery but heads 6/6 when asked
+cold on the official website; Fable 5 thinking flips heads 11/11 in the battery but
+tails 5/6 cold. Not a contradiction — conditional distributions behaving as such.
+This is why every comparison in this tool requires matching protocols, and
+cross-protocol comparisons degrade to relative ranking (protocol text and measured
+evidence: [`experiments/frontier/PROTOCOL.md`](experiments/frontier/PROTOCOL.md)).
 
 ![Pairwise aggregated JSD between 9 frontier models](experiments/out/fig_frontier_matrix.png)
 
@@ -369,10 +402,15 @@ fixed-seed reproducibility as an extra signal — is the planned v2. Design in
   distribution deviates significantly from the reference; causes include model
   substitution, quantization, version rollback, or caching. Keep the JSON report
   and re-audit before drawing conclusions.
-- The frontier fingerprints were sampled inside the Cursor agent harness (system
-  prompt present, temperature not controlled). They demonstrate non-randomness and
-  separability but are not directly comparable to bare-API numbers; n=11 per model
-  is small and the self-noise band is wide.
+- Fingerprints are highly sensitive to collection conditions (channel, protocol,
+  tier, and any user system prompt are all part of the conditioning). The tool
+  treats protocol as a first-class attribute and degrades cross-protocol comparisons
+  to relative ranking — the flip side is that a reference is only valid under its
+  own conditions, and changing conditions means re-enrolling.
+- The frontier fingerprints were sampled inside the Cursor agent harness under a
+  battery protocol (system prompt present, temperature not controlled). They
+  demonstrate non-randomness and separability but are not directly comparable to
+  bare-API numbers; n=11 per model is small and the self-noise band is wide.
 - Same-weights mode changes (thinking on/off) are invisible to the fingerprint;
   detecting them requires latency/length side-channels.
 - An adversary that identifies audit traffic at the account level defeats any

@@ -34,6 +34,28 @@ from .screens import screen_response_cache
 BAND_MATCH = 0.18     # 最近邻距离 ≤ 此值：行为上可认为一致
 BAND_UNKNOWN = 0.32   # 最近邻距离 ≥ 此值：库里没有像它的，判未知
 
+# ---- 采集协议：指纹是（模型 × 渠道 × 协议 × 档位）的条件分布，协议是一等属性 ----
+# 在线探针协议：enroll/audit/identify 探测端点时用的问法——每题独立请求、全新对话。
+PROBE_PROTOCOL = "cold-single"
+# harness 参考的采集协议：一个全新实例一次答完整卷十题（见 experiments/frontier/PROTOCOL.md）。
+HARNESS_PROTOCOL = "harness-battery"
+
+# 跨协议时同一个模型答案本就不同，唯一正确处理：只比相对排名、不做硬判定。
+# 全局唯一措辞，供 identify / CLI / WebUI 复用，避免各处说法不一致。
+CROSS_PROTOCOL_NOTE = (
+    "参考按套卷协议采集（一个实例一次答完十题），在线识别用的是单题冷探针——"
+    "两种协议下同一模型的答案本就不同（实测抛硬币：套卷=tails、冷问=heads）。"
+    "故跨协议只比『最像谁』的相对排名，不做 PASS/FAIL 硬判定；要硬判定请用官方 key 走 "
+    "enroll+audit（同协议），或用 reproduce 复核包按套卷协议复跑。"
+)
+
+
+def entry_protocol(entry: "LibraryEntry") -> str:
+    """条目的采集协议：显式 protocol 优先，否则按渠道推断（harness=套卷，其余=冷探针）。"""
+    if getattr(entry, "protocol", ""):
+        return entry.protocol
+    return HARNESS_PROTOCOL if "harness" in entry.channel else PROBE_PROTOCOL
+
 
 def default_library_path() -> Path:
     """仓库内置库目录 refs/（相对本文件定位，安装为包后仍可用 --library 覆盖）。"""
@@ -50,6 +72,7 @@ class LibraryEntry:
     model: str                # 展示名，如 "Claude Fable 5"
     family: str = ""
     channel: str = "api"      # api / cursor-harness / simulation
+    protocol: str = ""        # 采集协议；缺省由 entry_protocol() 按渠道推断
     file: str = ""            # 相对库根目录的指纹文件路径
     enrolled_at: str = ""
     samples_per_cell: int = 0
@@ -122,6 +145,8 @@ class IdentifyResult:
     verdict: str                      # PASS / FAIL / SUSPECT / BEST_MATCH / UNKNOWN / INCONCLUSIVE
     detail: str
     warning: str = ""
+    protocol: str = ""                # 参考渠道的采集协议
+    protocol_matched: bool = True     # 探针协议是否与参考一致；False → 只能相对排名，无硬判定
     n_queries: int = 0
     errors: int = 0
     ranking: list = field(default_factory=list)    # [(entry_id, 聚合JSD)] 升序
@@ -161,6 +186,10 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
     families = {e.id: e.family for e in entries}
     claimed_entry = library.resolve(claimed, channel)
 
+    # 渠道内条目协议一致；在线探针恒为冷单题。协议一致才允许硬判定。
+    chan_protocol = entry_protocol(entries[0])
+    protocol_matched = (chan_protocol == PROBE_PROTOCOL)
+
     # cell 全集 = 该频道所有参考里出现过的 cell（且探针银行认识它）
     known = set(probes.all_cells())
     cells = sorted({c for counts in refs.values() for c in counts} & known)
@@ -170,11 +199,13 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
 
     rng = random.Random(seed)
 
-    # 库内验证：同一条流喂序贯检验
+    # 库内验证：同一条流喂序贯检验。
+    # 仅在协议一致（参考也是冷单题）时才建检验：跨协议下真身也会显著偏离参考
+    # （实测同模型抛硬币套卷=tails、冷问=heads），α 保证不成立，只做相对排名。
     test = None
     cfg = BettingConfig(alpha=alpha)
     betting_cells: set = set()
-    if claimed_entry is not None:
+    if claimed_entry is not None and protocol_matched:
         ref_counts = refs[claimed_entry.id]
         bet_ref = {c: ref_counts[c] for c in cells
                    if sum(ref_counts.get(c, {}).values()) >= 10}
@@ -231,14 +262,13 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
         channel=channel, verdict="", detail="", n_queries=n, errors=errors,
         ranking=near.ranking, nearest=near.nearest,
         nearest_distance=near.nearest_distance, claimed_distance=near.claimed_distance,
-        cache_flags=flags, observed_counts=test_fp.counts())
+        cache_flags=flags, observed_counts=test_fp.counts(),
+        protocol=chan_protocol, protocol_matched=protocol_matched)
 
     def _finish(r: IdentifyResult) -> IdentifyResult:
-        # harness 频道的参考采自 agent 通道，identify 却总是直连 HTTP——必然跨渠道
-        if "harness" in channel:
-            note = ("参考指纹采自 agent harness 通道，与直连 API 存在系统性通道偏移："
-                    "绝对距离整体偏大属预期，请侧重相对排名，归属以复核包双跑为准。")
-            r.warning = f"{r.warning}　{note}" if r.warning else note
+        # 参考与在线单题探针跨协议：绝对距离对真身也会整体偏大，只能看相对排名。
+        if not protocol_matched:
+            r.warning = f"{r.warning}　{CROSS_PROTOCOL_NOTE}" if r.warning else CROSS_PROTOCOL_NOTE
         return r
 
     # ---- 判定阶梯 ----
@@ -263,7 +293,7 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
             res.detail += " 另检出疑似响应级缓存（服务完整性违规，独立于指纹证据）。"
         return _finish(res)
 
-    # 声称不在库里 → 纯识别降档
+    # 纯识别降档：声称不在库里，或 harness 频道（套卷参考 × 冷探针，跨协议）
     if not near.ranking:
         res.verdict = "INCONCLUSIVE"
         res.detail = "有效样本不足，无法与库比对（可加大 --samples 或检查端点报错）。"
@@ -272,21 +302,38 @@ def identify(endpoint, library: Library, claimed: str, channel: str = "api",
     best_id, best_d = near.ranking[0]
     best_entry = library.get(best_id)
     best_name = best_entry.model if best_entry else best_id
+    if claimed_entry is not None:
+        why = (f"『{claimed_entry.model}』的参考与在线单题探针跨协议，只做相对排名、不做硬判定。"
+               if not protocol_matched
+               else f"『{claimed_entry.model}』样本不足以序贯定论，退为相对排名。")
+        cd = (f"；到声称参考的距离 {res.claimed_distance:.3f}"
+              if res.claimed_distance is not None else "")
+    else:
+        why = f"声称的『{claimed}』不在指纹库中，无法直接验真。"
+        cd = ""
     if best_d <= BAND_MATCH:
         res.verdict = "BEST_MATCH"
-        res.detail = (f"声称的『{claimed}』不在指纹库中，无法直接验真。"
-                      f"但端点行为与库内『{best_name}』一致（聚合 JSD={best_d:.3f} ≤ {BAND_MATCH}）。"
-                      f"若这与声称的档次不符，就是问题。")
+        note = ("与声称一致。" if (claimed_entry is not None and best_id == claimed_entry.id)
+                else "若这与声称的档次不符，就是问题。")
+        res.detail = (f"{why}端点行为与库内『{best_name}』一致"
+                      f"（聚合 JSD={best_d:.3f} ≤ {BAND_MATCH}{cd}）。{note}")
     elif best_d >= BAND_UNKNOWN:
         res.verdict = "UNKNOWN"
-        res.detail = (f"声称的『{claimed}』不在指纹库中，且端点行为与库内任何模型都不像"
-                      f"（最近的『{best_name}』也有 JSD={best_d:.3f} ≥ {BAND_UNKNOWN}）。"
+        res.detail = (f"{why}端点行为与库内任何模型都不像"
+                      f"（最近的『{best_name}』也有 JSD={best_d:.3f} ≥ {BAND_UNKNOWN}{cd}）。"
                       f"可能是未入册的新模型或深度定制部署——如实报告：未知。")
     else:
         res.verdict = "INCONCLUSIVE"
-        res.detail = (f"声称的『{claimed}』不在指纹库中；端点最像库内『{best_name}』"
-                      f"（JSD={best_d:.3f}），但落在灰区 ({BAND_MATCH}, {BAND_UNKNOWN})，"
+        res.detail = (f"{why}端点最像库内『{best_name}』"
+                      f"（JSD={best_d:.3f}{cd}），但落在灰区 ({BAND_MATCH}, {BAND_UNKNOWN})，"
                       f"证据不足以定论。建议加大 --samples。")
+    if (claimed_entry is not None and best_id != claimed_entry.id
+            and res.claimed_distance is not None
+            and res.claimed_distance - best_d >= 0.05):
+        hint = (f"排名线索：最像『{best_name}』而非声称的参考"
+                f"（差距 {res.claimed_distance - best_d:.3f}）。跨协议对比仅供参考，"
+                f"归属以复核包套卷双跑为准。")
+        res.warning = f"{hint}　{res.warning}" if res.warning else hint
     if flags:
         res.detail += " 另检出疑似响应级缓存（服务完整性违规）。"
     return _finish(res)

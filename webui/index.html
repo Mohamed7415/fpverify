@@ -138,10 +138,12 @@
       <tbody id="reprobody"></tbody>
     </table>
     <p class="repro-note" style="margin-top:10px">
-      规则：<b>每个样本必须来自全新对话/全新实例</b>——同一个对话里连问十次不算数，
-      模型看得见自己之前的答案会刻意换。官网手点：每题新开一个对话；
-      或把下面的整套指令粘给 Cursor / Codex，让它扇出全新子代理来跑。</p>
+      规则一：<b>每个样本必须来自全新对话/全新实例</b>——同一个对话里连问十次不算数，
+      模型看得见自己之前的答案会刻意换。
+      规则二：<b>问法必须与参考的采集协议一致</b>（见上方说明）——同一个模型换一种问法，
+      答案本来就会不同，对不上不说明任何问题。</p>
     <div class="btnrow">
+      <button id="copy-battery" style="display:none">复制整卷题目（battery）</button>
       <button id="copy-agent">复制 Cursor/Codex 复核指令</button>
       <button id="dl-script">下载官方 API 复核脚本 (.py)</button>
     </div>
@@ -193,7 +195,7 @@ function showError(msg) {
 
 const VLABEL = {
   PASS: 'PASS — 与声称一致', FAIL: 'FAIL — 判定注水/偷换',
-  BEST_MATCH: '识别成功', UNKNOWN: '未知模型', SUSPECT: '存疑',
+  BEST_MATCH: 'BEST_MATCH — 行为一致', UNKNOWN: '未知模型', SUSPECT: '存疑',
   INCONCLUSIVE: '证据不足',
 };
 function showResult(res) {
@@ -232,15 +234,21 @@ async function loadRepro(entryId) {
     const d = await r.json();
     if (d.error || !d.invariants || !d.invariants.length) return;
     reproData = d;
+    const battery = d.protocol === 'harness-battery';
     $('repro-note').textContent =
-      `参考：${d.model}（渠道 ${d.channel}，入册 ${d.enrolled_at}，n=${d.samples_per_cell}/cell）。` +
-      `下面是该模型众数占比最高的题。两边都问：官网新对话问一遍（验参考表），` +
-      `你的中转站也问一遍（验上面的判定）——两边答案都对上，这个结果就不需要经过我们；` +
-      `对不上，带着记录来仓库提 issue。`;
+      `参考：${d.model}（渠道 ${d.channel}，协议 ${d.protocol}，入册 ${d.enrolled_at}，` +
+      `n=${d.samples_per_cell}/${battery ? '卷' : 'cell'}）。` +
+      (battery
+        ? '这份参考按套卷协议采集：一个全新实例一次答完整卷十题。复核必须同协议——' +
+          '整卷粘贴给全新对话/子代理（下方按钮复制整卷），不要拆开单题冷问。'
+        : '这份参考按冷协议采集：每题独立请求、全新对话。逐题复制，每题新开一个对话问；' +
+          '官方 API 与被测端点各跑一遍并排对答案，两边都对上就不需要信我们。') +
+      ' 复核结果与参考表对不上，带着记录来仓库提 issue。';
     $('reprobody').innerHTML = d.invariants.map((v, i) =>
       `<tr><td>${esc(v.prompt)}</td><td>${esc(v.expected)}</td>` +
       `<td>${Math.round(v.share * 100)}%（n=${v.n}）</td>` +
-      `<td><a href="#" class="copyq" data-i="${i}">复制题目</a></td></tr>`).join('');
+      `<td>${battery ? '' : `<a href="#" class="copyq" data-i="${i}">复制题目</a>`}</td></tr>`).join('');
+    $('copy-battery').style.display = battery ? '' : 'none';
     $('repro').style.display = 'block';
   } catch (e) { /* 复核包生成失败不影响主结果 */ }
 }
@@ -267,6 +275,10 @@ $('reprobody').addEventListener('click', ev => {
 $('copy-agent').addEventListener('click', ev => {
   if (!reproData) return;
   copyText(reproData.files['cursor_prompt.md'], ev.target, '已复制，去粘贴给 Cursor/Codex ✓');
+});
+$('copy-battery').addEventListener('click', ev => {
+  if (!reproData) return;
+  copyText(reproData.files['battery.txt'], ev.target, '已复制整卷，粘到全新对话 ✓');
 });
 $('dl-script').addEventListener('click', () => {
   if (!reproData) return;

@@ -143,6 +143,7 @@ def main(argv=None):
             return 0
 
         if args.cmd == "reproduce":
+            from .library import HARNESS_PROTOCOL, entry_protocol
             from .reproduce import write_pack
 
             entry = lib.resolve(args.claimed)
@@ -157,18 +158,29 @@ def main(argv=None):
             except ValueError as e:
                 print(str(e))
                 return 2
-            print(f"复核包已生成: {out}/  （参考: {entry.model}, 渠道 {entry.channel}）")
+            proto = entry_protocol(entry)
+            print(f"复核包已生成: {out}/  （参考: {entry.model}, 渠道 {entry.channel}, 协议 {proto}）")
             print()
             print("铁律参考表（题目 → 参考众数, 占比）:")
             for i, inv in enumerate(invs, 1):
                 print(f"  {i}. {inv.prompt}")
                 print(f"     → {inv.expected}  {inv.share:.0%} (n={inv.n})")
             print()
-            print("复核方式（详见包内 README.md；每个样本必须来自全新对话/实例）:")
-            print(f"  A. Cursor/agent IDE: 粘贴 {out}/cursor_prompt.md")
-            print(f"  B. Codex CLI:        {out}/codex_loop.sh 或 .ps1")
-            print(f"  C. 官方 API key:     python {out}/official_api.py --base-url ... --model ... --key ...")
-            print(f"  D. 官网手点:         每题新开一个对话，重复 {args.runs} 次")
+            print("复核方式（详见包内 README.md；每个样本必须来自全新对话/实例，"
+                  "且问法必须与参考同协议）:")
+            if proto == HARNESS_PROTOCOL:
+                print(f"  A. Cursor/agent IDE: 粘贴 {out}/cursor_prompt.md（扇出全新子代理各答整卷）")
+                print(f"  B. Codex CLI:        {out}/codex_loop.sh 或 .ps1（每次全新会话答整卷）")
+                print(f"  C. OpenAI 兼容端点:  python {out}/official_api.py --base-url ... --model ... --key ...")
+                print(f"                       （跨渠道仅看方向；官方与中转站各跑一遍互相对照）")
+                print(f"  D. 官网手点:         把 {out}/battery.txt 整卷粘进全新对话，重复 {args.runs} 个新对话")
+                print(f"     （套卷参考不要拆开单题冷问——同一模型换问法答案本就不同）")
+            else:
+                print(f"  A. 官方 API key:     python {out}/official_api.py --base-url ... --model ... --key ...")
+                print(f"                       （与参考同协议：每题独立请求，最严谨）")
+                print(f"  B. Cursor/agent IDE: 粘贴 {out}/cursor_prompt.md（跨渠道，仅看方向）")
+                print(f"  C. Codex CLI:        {out}/codex_loop.sh 或 .ps1（跨渠道，仅看方向）")
+                print(f"  D. 官网手点:         每题新开一个对话，重复 {args.runs} 次（近似渠道）")
             return 0
 
         ep = _endpoint(args)
@@ -195,7 +207,7 @@ def main(argv=None):
 
 # 摘要给人看，附录给较真的人。
 _VERDICT_ZH = {
-    "PASS": "相符", "FAIL": "不符", "BEST_MATCH": "库外·行为一致",
+    "PASS": "相符", "FAIL": "不符", "BEST_MATCH": "行为一致",
     "UNKNOWN": "未知", "INCONCLUSIVE": "证据不足", "SUSPECT": "存疑",
 }
 
@@ -206,8 +218,10 @@ def _print_identify(res, lib):
 
     print(line)
     print(f"结果：{_VERDICT_ZH.get(res.verdict, res.verdict)}（{res.verdict}）")
+    proto = getattr(res, "protocol", "") or "?"
+    proto_tag = "与探针同协议，可硬判定" if getattr(res, "protocol_matched", True) else "跨协议，仅相对排名"
     print(f"声称：{name(res.claimed_entry) if res.claimed_entry else res.claimed}"
-          f"　渠道：{res.channel}")
+          f"　渠道：{res.channel}　协议：{proto}（{proto_tag}）")
     print("依据：")
     print(f"  · {res.detail}")
     if res.nearest and res.nearest != res.claimed_entry:
@@ -218,7 +232,8 @@ def _print_identify(res, lib):
     if repro_id:
         print(f"自行复核：python -m fpverify.cli reproduce --claimed {repro_id}")
         if res.verdict in ("PASS", "BEST_MATCH"):
-            print("　　　　　（同一套题官网、被测端点各问一遍并排对答案——通过与否都不需要信我们）")
+            print("　　　　　（复核包按参考的采集协议出题并附参考答案，亲手重跑对表——"
+                  "通过与否都不需要信我们）")
     print(line)
 
     print("附录")

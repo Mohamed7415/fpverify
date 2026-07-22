@@ -69,10 +69,11 @@ def test_resolve_fuzzy(api_library):
 
 
 def test_identify_claimed_in_library_passes(api_library):
-    """真身声称自己 → PASS（库内验真，带 FPR 保证）。"""
+    """真身声称自己 → PASS（库内验真，带 FPR 保证）。api 参考与探针同为冷协议。"""
     ep = make_endpoint("honest", "gpt-4o", seed=41)
     res = identify(ep, api_library, "gpt-4o", channel="api", samples_per_cell=8, seed=41)
     assert res.claimed_entry == "gpt-4o"
+    assert res.protocol == "cold-single" and res.protocol_matched
     assert res.verdict == "PASS", f"{res.verdict}: {res.detail}"
     assert res.betting is not None
 
@@ -148,7 +149,9 @@ def test_bundled_refs_load():
 
 
 def test_bundled_refs_identify_harness_channel():
-    """回放 fable5 实测分布的端点，在 harness 频道声称 fable5 → 不应被判 FAIL；
+    """harness 参考是套卷协议、探针是冷单题——跨协议只许相对排名，不许 PASS/FAIL 硬判定。
+
+    回放 fable5 实测分布的端点：声称 fable5 → 不应 FAIL 且必须声明跨协议；
     声称 composer25（行为差异大的另一家）→ 不应 PASS。"""
     lib = Library.load(default_library_path())
     counts = lib.fingerprint(lib.get("fable5")).counts()
@@ -156,9 +159,12 @@ def test_bundled_refs_identify_harness_channel():
     res = identify(replay_endpoint(counts, 51), lib, "fable5",
                    channel="cursor-harness", samples_per_cell=8, seed=51)
     assert res.claimed_entry == "fable5"
-    assert res.verdict != "FAIL", f"{res.verdict}: {res.detail}"
-    assert "通道偏移" in res.warning, "harness 频道必须提示跨渠道偏移"
+    assert res.protocol == "harness-battery"
+    assert not res.protocol_matched, "harness 参考对冷探针必须标记协议不一致"
+    assert res.verdict not in ("PASS", "FAIL"), f"跨协议出了硬判定 {res.verdict}: {res.detail}"
+    assert "跨协议" in res.warning, "必须向用户解释跨协议只看相对排名"
 
     res2 = identify(replay_endpoint(counts, 52), lib, "composer25",
                     channel="cursor-harness", samples_per_cell=8, seed=52)
     assert res2.verdict != "PASS", f"回放 fable5 冒充 composer25 竟然 PASS: {res2.detail}"
+    assert not res2.protocol_matched

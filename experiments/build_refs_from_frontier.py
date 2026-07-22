@@ -88,10 +88,11 @@ def main() -> int:
         fp.save(out)
         entries.append({
             "id": mid, "model": display, "family": family,
-            "channel": "cursor-harness", "file": f"harness/{mid}.json",
+            "channel": "cursor-harness", "protocol": "harness-battery",
+            "file": f"harness/{mid}.json",
             "enrolled_at": "2026-07", "samples_per_cell": len(rows),
             "source": SOURCE,
-            "note": "样本量小（n=11/cell）；harness 内含系统提示、温度不受控，仅限同渠道比对",
+            "note": "样本量小（n=11/cell）；harness 套卷协议采集，与在线单题冷探针跨协议，仅限同协议比对",
         })
         print(f"  {out.name}: {fp.total_samples()} 样本, {len(fp.cells)} cell")
 
@@ -99,8 +100,8 @@ def main() -> int:
         "version": 1,
         "updated_at": "2026-07-21",
         "channels": {
-            "api": "裸 OpenAI 兼容 API 直连入册（可用于审计中转站）——征集社区贡献中",
-            "cursor-harness": "Cursor agent harness 内采样（仅限同渠道比对 / identify 演示）",
+            "api": "裸 OpenAI 兼容 API 直连入册，冷单题协议（可硬判定审计中转站）——征集社区贡献中",
+            "cursor-harness": "Cursor agent harness 内套卷协议采样；与在线单题探针跨协议，只做相对排名 / identify 演示",
             "simulation": "仿真分布（仅作格式示例/测试）",
         },
         "entries": entries,

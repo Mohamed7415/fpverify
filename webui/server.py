@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from fpverify.endpoints import HTTPEndpoint
-from fpverify.library import Library, default_library_path, identify
+from fpverify.library import Library, default_library_path, entry_protocol, identify
 
 INDEX = Path(__file__).with_name("index.html")
 
@@ -97,7 +97,8 @@ class Handler(BaseHTTPRequestHandler):
                     "updated_at": lib.meta.get("updated_at", ""),
                     "channels": lib.meta.get("channels", {}),
                     "entries": [{"id": e.id, "model": e.model, "family": e.family,
-                                 "channel": e.channel, "enrolled_at": e.enrolled_at,
+                                 "channel": e.channel, "protocol": entry_protocol(e),
+                                 "enrolled_at": e.enrolled_at,
                                  "samples_per_cell": e.samples_per_cell, "note": e.note}
                                 for e in lib.entries],
                 })
@@ -122,6 +123,7 @@ class Handler(BaseHTTPRequestHandler):
                 invs, files = build_pack_texts(entry, lib.fingerprint(entry))
                 self._json({
                     "entry": entry.id, "model": entry.model, "channel": entry.channel,
+                    "protocol": entry_protocol(entry),
                     "enrolled_at": entry.enrolled_at,
                     "samples_per_cell": entry.samples_per_cell,
                     "invariants": [inv.to_dict() for inv in invs],
