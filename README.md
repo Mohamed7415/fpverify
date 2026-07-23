@@ -1,6 +1,7 @@
-# fpverify — Behavioral Fingerprinting for LLM APIs
+# fpverify — Behavioral Fingerprinting for LLM APIs & Agent IDEs
 
-Checks whether an OpenAI-compatible endpoint actually serves the model it claims to.
+Checks whether an LLM endpoint — an API relay, or the agent IDE you pay for —
+actually serves the model it claims.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
@@ -15,6 +16,11 @@ This is not hypothetical: a March 2026 CISPA audit of "shadow APIs" found **45.8
 tested endpoints failed model-identity fingerprint verification**, with benchmark gaps
 up to 47 points — and those endpoints had been used as official models in 187 academic
 papers ([Real Money, Fake Models](https://arxiv.org/abs/2603.01919)).
+One layer up, the same question applies to agent IDEs: every request goes through
+the vendor's backend, and which checkpoint actually answers is invisible from the
+client — reroutes and silent A/B tests included (April 2026: Cursor 3.0 was found
+by reverse engineering to ship a rebranded Claude Code agent, fine-tuned checkpoint
+included; the vendor described it as an A/B test on under 1% of traffic).
 
 The method: LLMs cannot produce random output. Ask a model to "name a random number
 between 1 and 100" and its answers concentrate heavily — on different values for
@@ -42,7 +48,41 @@ cd fpverify
 pip install -r requirements.txt
 ```
 
-### Case 1: you only have a relay key
+### Case 1: what is your agent IDE actually running?
+
+Applies to Cursor, Codex, and any IDE that can fan out subagents. The bundled
+library ships in-harness baselines for 9 frontier models (July 2026, Cursor
+subagents, battery protocol) — to our knowledge the only public reference set
+collected inside an agent harness. Bare-API fingerprint databases cannot answer
+this question: the in-harness distribution is a different conditional (vendor
+system prompt, sampling, routing), and comparing across conditions misjudges
+(measurements: [`experiments/frontier/PROTOCOL.md`](experiments/frontier/PROTOCOL.md)).
+
+```bash
+python -m fpverify.cli library                          # list available baselines
+python -m fpverify.cli reproduce --claimed gpt-5.6-sol
+```
+
+Paste the pack's `cursor_prompt.md` into the IDE with the model under test
+selected. It fans out N fresh subagents (no shared context), each answering the
+original ten-question battery verbatim, then tallies answers and modes per
+question. Reading the tally (thresholds ship inside the pack):
+
+- strong questions (reference share ≥ 90%) mostly line up → consistent with the
+  claimed model's July-2026 baseline;
+- several strong questions deviate at once, or the tally lines up with a
+  *different* model's column in
+  [Measurements](#measurements-frontier-models-cannot-be-random) → not behaving
+  like the claimed baseline. That is the alarm;
+- either way, an issue with the tally attached is welcome — baselines are
+  re-enrolled after confirmed model-version bumps.
+
+This is a same-protocol comparison (battery vs. battery), so the tally reads
+directly against the baseline. It is change detection against a dated snapshot,
+not notarization: the platform's model label was trusted once, at enrollment
+time. What it catches is silent change and cross-model mismatch after that point.
+
+### Case 2: you only have a relay key
 
 Start the local web console:
 
@@ -80,7 +120,7 @@ only reports relative ranking (BEST_MATCH / UNKNOWN) and says so in the result.
 
 Below the verdict the console shows a self-verification table: the claimed model's
 most deterministic questions, their reference answers, copy-paste prompts and a
-downloadable script. Verification does not require this tool — see Case 2.
+downloadable script. Verification does not require this tool — see Case 4.
 
 Privacy: probe traffic goes directly from your machine to the relay; the key stays in
 local process memory, never written to disk or uploaded. The fingerprint library is
@@ -101,7 +141,49 @@ battery protocol, ranking only). Cold-protocol references for the `api` channel 
 open for community contribution — one enrollment costs cents; anti-poisoning rules
 are in [`refs/README.md`](refs/README.md).
 
-### Case 2: verify a verdict without trusting this tool
+### Case 3: you have an official API key
+
+The reference fingerprint is enrolled directly from the official channel. No shared
+library involved; this is the strongest evidence mode.
+
+```bash
+# 1. Enroll a reference from the official API (~720 one-token requests, a few cents;
+#    re-enroll after model version bumps)
+python -m fpverify.cli enroll \
+    --base-url https://api.openai.com/v1 --api-key $OFFICIAL_KEY \
+    --model gpt-5.6-sol --samples 20 --out ref_gpt56.json
+
+# 2. Audit any OpenAI-compatible endpoint claiming to serve that model
+python -m fpverify.cli audit \
+    --base-url https://some-relay.example/v1 --api-key $RELAY_KEY \
+    --model gpt-5.6-sol --ref ref_gpt56.json --report audit.json
+```
+
+Blatant substitution typically triggers early stopping within ~15 queries (~$0.002).
+Reports include the aggregated JSD and reference bands from the underlying paper
+(0.140 same-source / 0.227 cross-deployment / 0.463 impostor).
+
+Two self-checks, which double as a test of this project's FPR claim (one cheap
+official key is enough):
+
+```bash
+# Enroll model A from its official API
+python -m fpverify.cli enroll --base-url https://api.deepseek.com/v1 \
+    --api-key $KEY --model deepseek-v4-pro --samples 20 --out ref_a.json
+
+# Audit the SAME official endpoint against A's reference: must PASS
+python -m fpverify.cli audit --base-url https://api.deepseek.com/v1 \
+    --api-key $KEY --model deepseek-v4-pro --ref ref_a.json
+
+# Audit a DIFFERENT model against A's reference: must FAIL
+python -m fpverify.cli audit --base-url https://api.deepseek.com/v1 \
+    --api-key $KEY --model deepseek-v4-flash --ref ref_a.json
+```
+
+If an official, direct-connection endpoint FAILs against its own freshly enrolled
+reference, open an issue with the audit JSON; that would refute the FPR claim.
+
+### Case 4: verify a verdict without trusting this tool
 
 ```bash
 python -m fpverify.cli reproduce --claimed gpt-5.6-sol
@@ -154,48 +236,6 @@ PASS":
   (`observed_counts`); together with the reference file you enrolled yourself,
   anyone can recompute the verdict with independent code.
 - No paid "certification" or vendor whitelisting, ever. No vendor ads.
-
-### Case 3: you have an official API key
-
-The reference fingerprint is enrolled directly from the official channel. No shared
-library involved; this is the strongest evidence mode.
-
-```bash
-# 1. Enroll a reference from the official API (~720 one-token requests, a few cents;
-#    re-enroll after model version bumps)
-python -m fpverify.cli enroll \
-    --base-url https://api.openai.com/v1 --api-key $OFFICIAL_KEY \
-    --model gpt-5.6-sol --samples 20 --out ref_gpt56.json
-
-# 2. Audit any OpenAI-compatible endpoint claiming to serve that model
-python -m fpverify.cli audit \
-    --base-url https://some-relay.example/v1 --api-key $RELAY_KEY \
-    --model gpt-5.6-sol --ref ref_gpt56.json --report audit.json
-```
-
-Blatant substitution typically triggers early stopping within ~15 queries (~$0.002).
-Reports include the aggregated JSD and reference bands from the underlying paper
-(0.140 same-source / 0.227 cross-deployment / 0.463 impostor).
-
-Two self-checks, which double as a test of this project's FPR claim (one cheap
-official key is enough):
-
-```bash
-# Enroll model A from its official API
-python -m fpverify.cli enroll --base-url https://api.deepseek.com/v1 \
-    --api-key $KEY --model deepseek-v4-pro --samples 20 --out ref_a.json
-
-# Audit the SAME official endpoint against A's reference: must PASS
-python -m fpverify.cli audit --base-url https://api.deepseek.com/v1 \
-    --api-key $KEY --model deepseek-v4-pro --ref ref_a.json
-
-# Audit a DIFFERENT model against A's reference: must FAIL
-python -m fpverify.cli audit --base-url https://api.deepseek.com/v1 \
-    --api-key $KEY --model deepseek-v4-flash --ref ref_a.json
-```
-
-If an official, direct-connection endpoint FAILs against its own freshly enrolled
-reference, open an issue with the audit JSON; that would refute the FPR claim.
 
 ## Local demo (no keys required)
 
@@ -352,14 +392,30 @@ screening), auto-calibration, and the frontier study above.
 
 ## Related tools
 
+Nearest neighbors first: three tools build on the same underlying paper's bare-API
+fingerprints. The paper's reference dataset is public
+([Zenodo, CC-BY-4.0](https://doi.org/10.5281/zenodo.21278557)) and browsable at
+[tosea.ai](https://tosea.ai/free-tools/fingerprints) — if all you need is a quick
+bare-API check against that snapshot, those are fine choices.
+
 | Tool | Approach | Verdict type |
 |---|---|---|
+| [tosea.ai fingerprint DB + checker](https://tosea.ai/free-tools/fingerprints) | the paper's snapshot as a browsable database (167 models, bare API via OpenRouter, temp 1.0, one collection date); samples your endpoint in-browser | JSD comparison against the snapshot |
+| [llm-fingerprint-detector](https://github.com/ToseaAI/llm-fingerprint-detector) | zero-dependency TypeScript CLI over the same dataset, 11 bundled references | fixed-sample JSD threshold |
+| [ChatHub model fingerprint](https://blog.chathub.gg/verify-ai-model-api-with-fingerprints/) | commercial web tool; compares a trusted reference endpoint against the endpoint under test (8- or 40-cell battery) | fixed-sample JSD comparison |
+
+Different approaches:
+
+| Tool | Approach | Verdict type |
+|---|---|---|
+| [LLMmap](https://github.com/pasquini-dario/LLMmap) | active fingerprinting, trained classifier (52 models; USENIX Security 2025) | closed-set classification + open-set embeddings |
 | [api-relay-audit](https://github.com/toby-bridges/api-relay-audit) | security scan: injection, SSE integrity, identity keywords | substitution treated as "signals, not proof" |
 | [veridrop](https://github.com/canarybyte/veridrop) | protocol conformance + Claude thinking-signature (cryptographic) + usage-field forensics | strong for Claude; protocol-level elsewhere |
 | [RelayRadar (AI45Lab)](https://github.com/AI45Lab/RelayRadar) | adaptive discriminative prompts (AB3IT), TVD + permutation p-values | fixed-sample hypothesis test |
 | [relay-radar (AetherCore)](https://github.com/AetherCore-Dev/relay-radar) | passive style monitoring + LLMmap probes | accuracy-style score |
 | [zing](https://github.com/cenbonew/zing) | capability/knowledge profiles (context window, tokenizer, cutoff) | profile consistency check |
 | [KBF (arXiv:2605.29524)](https://arxiv.org/abs/2605.29524) | knowledge-boundary numerical recall | fixed-sample binomial test |
+| [cocodot llmprobe](https://github.com/cocodot2026/cocodot-llmprobe) | six-probe relay check: self-reported identity, judge-scored capability, latency, context, rate limits, consistency | score card; operated by a relay vendor |
 
 What fpverify does differently:
 
@@ -368,13 +424,22 @@ What fpverify does differently:
    low-rate passive auditing — the only regime that survives account-level adaptive
    routing (see the adversarial analysis). Re-running fixed-sample tests continuously
    inflates their real error rates.
-2. Auto-calibrated benign-drift tolerance (Dirichlet posterior-predictive), instead
+2. Condition-matched references, including the agent-harness channel. A fingerprint
+   is conditional on (model × channel × protocol); a bare-API snapshot cannot answer
+   "what is my agent IDE actually running", and comparing across conditions
+   misjudges. fpverify pins protocol as a first-class attribute and ships in-harness
+   baselines for 9 frontier models (July 2026, raw data committed, one-command
+   reproduction) — to our knowledge the only public set of its kind.
+3. Auto-calibrated benign-drift tolerance (Dirichlet posterior-predictive), instead
    of a hand-tuned threshold.
-3. A July-2026 frontier fingerprint study with platform-guaranteed identity, raw data
-   committed, one-command reproduction.
-4. A breaking-point analysis that states where detection fails (random dilution
+4. Verdicts you can walk away from: every reference exports a reproduce pack that
+   re-runs the evidence under the reference's own conditions, without this tool
+   (Case 4 above).
+5. A breaking-point analysis that states where detection fails (random dilution
    ε ≈ 0.20–0.28; catching ε costs ~1/ε² samples), rather than implying the detector
    is unbeatable.
+6. Vendor neutrality: no paid certification, no vendor ads, verdicts computed
+   locally with no telemetry — relay-operated checkers cannot make that claim.
 
 veridrop's Claude thinking-signature check is cryptographic and complementary; when
 auditing Claude endpoints, run both. Behavioral fingerprints are the layer that works
@@ -394,6 +459,12 @@ docs/         research notes (problem, threat model, method, experiments, fronti
 
 ## Roadmap
 
+- **Protocol-aligned import of the public reference dataset.** The underlying
+  paper's 167-model bare-API fingerprints are CC-BY-4.0 on Zenodo. Where probe
+  phrasing and sampling parameters can be aligned with ours, importing them extends
+  `api`-channel coverage at zero collection cost; imported entries stay marked with
+  their origin and collection conditions, and cross-protocol comparisons still
+  degrade to ranking as usual.
 - **Per-audit probe paraphrasing.** Probe phrasings currently come from a finite,
   public template bank, so a relay could in principle hard-code rules for known
   wordings (costs and failure modes are covered in the adversarial analysis:
